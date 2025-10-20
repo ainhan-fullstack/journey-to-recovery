@@ -1,18 +1,16 @@
 import express from "express";
 import type { Request, Response } from "express";
 import connection from "../db/connection";
-import { validateUserBody } from "../middleware/auth";
-import {
-  createUserSchema,
-  type CreateUserInput,
-} from "../utilities/createUserSchema";
+import { validateBody } from "../middleware/auth";
+import {registerSchema, type RegisterInput, loginSchema, type LoginInput} from "../utilities/createUserSchema";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import type { User } from "../utilities/types";
 
 const userRoutes = express.Router();
 
-userRoutes.post("/signup", validateUserBody(createUserSchema), async (req: Request, res: Response) => {
-    const { email, password }: CreateUserInput = req.body;
+userRoutes.post("/signup", validateBody(registerSchema), async (req: Request, res: Response) => {
+    const { email, password }: RegisterInput = req.body;
 
     //Check the email exists
     const [rows] = await connection.execute(
@@ -38,6 +36,29 @@ userRoutes.post("/signup", validateUserBody(createUserSchema), async (req: Reque
     res.status(201).json({ token });
   }
 );
+
+userRoutes.post('/login', validateBody(loginSchema), async (req: Request, res: Response) => {
+    const {email, password}: LoginInput = req.body;
+
+    //Check the email exists
+    const [rows] = await connection.execute("SELECT id, email FROM user WHERE email = ?", [email]);
+
+    if (!rows) {
+        return res.status(400).json({message: 'Email does not exist.'});
+    }
+
+    //Check the password match
+    const user: User = (rows as any)[0];
+    const isMatch = await bcrypt.compare(password, user.hashedPassword);
+
+    if (!isMatch) {
+        return res.status(400).json({message: 'Invalid password.'});
+    }
+    //Token
+    const token = jwt.sign({id: user.id}, process.env.JWT_SECRET as string, {expiresIn: '1h'});
+
+    res.status(200).json({ token });
+});
 
 userRoutes.get("/test-db", async (req: Request, res: Response) => {
   const [rows] = await connection.execute("SELECT 1 + 1 as solution");

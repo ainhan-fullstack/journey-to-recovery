@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { ZodError, type ZodType } from "zod";
 
-function validateUserBody(schema: ZodType) {
+function validateBody(schema: ZodType) {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       req.body = schema.parse(req.body);
@@ -15,4 +15,4 @@ function validateUserBody(schema: ZodType) {
   };
 }
 
-export { validateUserBody };
+export { validateBody };
