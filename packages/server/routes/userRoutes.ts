@@ -30,7 +30,7 @@ userRoutes.post("/signup", validateBody(registerSchema), async (req: Request, re
     await connection.execute("INSERT INTO user(id , email, password) VALUES(?, ?, ?)", [userId, email, hashedPassword]);
 
     // Sign the token
-    const token = jwt.sign({userId: userId}, process.env.JWT_SECRET as string, {expiresIn: '1h'});
+    const token = jwt.sign({userId: userId, email: email}, process.env.JWT_SECRET as string, {expiresIn: '1h'});
 
     //return token
     res.status(201).json({ token });
@@ -55,7 +55,7 @@ userRoutes.post('/login', validateBody(loginSchema), async (req: Request, res: R
         return res.status(400).json({message: 'Invalid password.'});
     }
     //Token
-    const token = jwt.sign({id: user.id}, process.env.JWT_SECRET as string, {expiresIn: '1h'});
+    const token = jwt.sign({id: user.id, email: user.email}, process.env.JWT_SECRET as string, {expiresIn: '1h'});
 
     res.status(200).json({ token });
 });
