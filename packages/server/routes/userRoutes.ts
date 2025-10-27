@@ -1,11 +1,12 @@
 import express from "express";
 import type { Request, Response } from "express";
 import connection from "../db/connection";
-import { validateBody } from "../middleware/auth";
+import { authenticateToken, validateBody } from "../middleware/auth";
 import {registerSchema, type RegisterInput, loginSchema, type LoginInput} from "../utilities/createUserSchema";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import type { User } from "../utilities/types";
+import { blacklistToken } from "../utilities/jwtBlackList";
 
 const userRoutes = express.Router();
 
@@ -59,6 +60,19 @@ userRoutes.post('/login', validateBody(loginSchema), async (req: Request, res: R
 
     res.status(200).json({ token });
 });
+
+userRoutes.post('/logout', authenticateToken, async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
+
+  if (token) {
+    await blacklistToken(token);
+    res.status(200).json({ message: 'Logged out successfully.' })
+  }
+  else {
+    res.status(400).json({ message: 'No token provided.' })
+  }
+})
 
 userRoutes.get("/test-db", async (req: Request, res: Response) => {
   const [rows] = await connection.execute("SELECT 1 + 1 as solution");
