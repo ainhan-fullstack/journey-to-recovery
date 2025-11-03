@@ -1,10 +1,10 @@
-import { Button } from "./components/ui/button";
+import Login from "./shared/components/Login";
+import Signup from "./shared/components/Signup";
 
 function App() {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center">
-      <Button>Click me</Button>
-    </div>
+    // <Login/>
+    <Signup />
   );
 }
 
