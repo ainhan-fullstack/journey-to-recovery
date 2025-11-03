@@ -108,10 +108,13 @@ userRoutes.post(
       { expiresIn: "7d" }
     );
 
+    const salt = await bcrypt.genSalt(10);
+    const hashRefreshToken = await bcrypt.hash(refreshToken, salt);
+
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await connection.execute(
       "INSERT INTO refresh_token (user_id, token, expires_at) VALUES (?, ?, ?)",
-      [user.id, refreshToken, expiresAt]
+      [user.id, hashRefreshToken, expiresAt]
     );
 
     res.cookie("refreshToken", refreshToken, {
@@ -147,10 +150,13 @@ userRoutes.post("/refresh", async (req: Request, res: Response) => {
       refreshToken,
     ]);
 
+    const salt = await bcrypt.genSalt(10);
+    const hashRefreshToken = await bcrypt.hash(newRefreshToken, salt);
+
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await connection.execute(
       "INSERT INTO refresh_token (user_id, token, expires_at) VALUES (?, ?, ?)",
-      [userInfo.id, newRefreshToken, expiresAt]
+      [userInfo.id, hashRefreshToken, expiresAt]
     );
 
     res.cookie("refreshToken", newRefreshToken, {
