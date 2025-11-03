@@ -1,7 +1,7 @@
 import express from "express";
 import type { Request, Response } from "express";
 import connection from "../db/connection";
-import { authenticateToken, validateBody } from "../middleware/auth";
+import { validateBody } from "../middleware/auth";
 import {
   registerSchema,
   type RegisterInput,
@@ -40,15 +40,34 @@ userRoutes.post(
       [userId, email, hashedPassword]
     );
 
-    // Sign the token
-    const token = jwt.sign(
+    // Sign the access token
+    const accessToken = jwt.sign(
       { userId: userId, email: email },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "1h" }
+      process.env.JWT_ACCESS_SECRET as string,
+      { expiresIn: "15m" }
     );
 
-    //return token
-    res.status(201).json({ token });
+    // Create and store the refresh token
+    const refreshToken = jwt.sign(
+      { userId: userId, email: email },
+      process.env.JWT_REFRESH_SECRET as string,
+      { expiresIn: "7d" }
+    );
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await connection.execute(
+      "INSERT INTO refresh_token (user_id, token, expires_at) VALUES (?, ?, ?)",
+      [userId, refreshToken, expiresAt]
+    );
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    //return tokens
+    res.status(201).json({ accessToken });
   }
 );
 
@@ -57,8 +76,6 @@ userRoutes.post(
   validateBody(loginSchema),
   async (req: Request, res: Response) => {
     const { email, password }: LoginInput = req.body;
-
-    console.log(email);
 
     //Check the email exists
     const [rows] = await connection.execute(
@@ -77,42 +94,115 @@ userRoutes.post(
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid password." });
     }
-    //Token
-    const token = jwt.sign(
+    // Sign the access token
+    const accessToken = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "1h" }
+      process.env.JWT_ACCESS_SECRET as string,
+      { expiresIn: "15m" }
     );
 
-    res.status(200).json({ token });
+    // Create and store the refresh token
+    const refreshToken = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_REFRESH_SECRET as string,
+      { expiresIn: "7d" }
+    );
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await connection.execute(
+      "INSERT INTO refresh_token (user_id, token, expires_at) VALUES (?, ?, ?)",
+      [user.id, refreshToken, expiresAt]
+    );
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({ accessToken });
   }
 );
+
+userRoutes.post("/refresh", async (req: Request, res: Response) => {
+  const refreshToken = req.cookies?.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).json({ message: "Refresh token not provided." });
+  }
+
+  try {
+    const userInfo = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET as string
+    ) as { id: string; email: string };
+
+    const newRefreshToken = jwt.sign(
+      { id: userInfo.id, email: userInfo.email },
+      process.env.JWT_REFRESH_SECRET as string,
+      { expiresIn: "7d" }
+    );
+
+    await connection.execute("DELETE FROM refresh_token WHERE token = ?", [
+      refreshToken,
+    ]);
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await connection.execute(
+      "INSERT INTO refresh_token (user_id, token, expires_at) VALUES (?, ?, ?)",
+      [userInfo.id, newRefreshToken, expiresAt]
+    );
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    const newAccessToken = jwt.sign(
+      { id: userInfo.id, email: userInfo.email },
+      process.env.JWT_ACCESS_SECRET as string,
+      { expiresIn: "15m" }
+    );
+
+    res.status(200).json({ newAccessToken });
+  } catch (error) {
+    console.log("Refresh token error:", error);
+    res.status(500).json({ message: "Server error during token refresh." });
+  }
+});
 
 userRoutes.post("/logout", async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(" ")[1];
+  const refreshToken = req.cookies?.refreshToken;
 
-  if (!token) {
-    return res.status(401).json({ message: "No token provided." });
-  }
-
-  try {
-    const decoded = jwt.decode(token) as { exp: number };
-    if (!decoded || !decoded.exp) {
-      return res.status(400).json({ message: "Invalid token format." });
+  if (token) {
+    try {
+      const decoded = jwt.decode(token) as { exp: number };
+      if (decoded && decoded.exp) {
+        const expiresAt = new Date(decoded.exp * 1000);
+        await connection.execute(
+          "INSERT INTO blacklisted_token (token, expires_at) VALUES (?, ?)",
+          [token, expiresAt]
+        );
+      }
+    } catch (error) {
+      console.log("Error blacklisting access token:", error);
     }
-
-    const expiresAt = new Date(decoded.exp * 1000);
-    await connection.execute(
-      "INSERT INTO blacklisted_token (token, expires_at) VALUES (?, ?)",
-      [token, expiresAt]
-    );
-
-    res.status(200).json({ message: "Logged out successfully." });
-  } catch (error) {
-    console.log("Logout Error:", error);
-    res.status(500).json({ message: "Server error during logout." });
   }
+
+  if (refreshToken) {
+    try {
+      await connection.execute("DELETE FROM refresh_token WHERE token = ?", [
+        refreshToken,
+      ]);
+    } catch (error) {
+      console.log("Error invalidating refresh token:", error);
+    }
+  }
+
+  res.status(200).json({ message: "Logged out successfully." });
 });
 
 userRoutes.get("/test-db", async (req: Request, res: Response) => {
