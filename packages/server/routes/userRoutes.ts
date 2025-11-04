@@ -18,15 +18,15 @@ userRoutes.post(
   "/signup",
   validateBody(registerSchema),
   async (req: Request, res: Response) => {
-    const { email, password }: RegisterInput = req.body;
+    const { name, email, password }: RegisterInput = req.body;
 
     //Check the email exists
     const [rows] = await connection.execute(
-      "SELECT EMAIL FROM user WHERE EMAIL=?",
+      "SELECT email FROM user WHERE email=?",
       [email]
     );
 
-    if (!rows) {
+    if ((rows as any).length > 0) {
       return res.status(400).json({ message: "Email already exists." });
     }
     // Hash password
@@ -36,8 +36,8 @@ userRoutes.post(
     // Save the user to the db
     const userId: string = crypto.randomUUID();
     await connection.execute(
-      "INSERT INTO user(id , email, password) VALUES(?, ?, ?)",
-      [userId, email, hashedPassword]
+      "INSERT INTO user(id, name, email, password) VALUES(?, ?, ?, ?)",
+      [userId, name, email, hashedPassword]
     );
 
     // Sign the access token
@@ -62,7 +62,7 @@ userRoutes.post(
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: false,//process.env.NODE_ENV === "production"
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -83,7 +83,7 @@ userRoutes.post(
       [email]
     );
 
-    if (!rows) {
+    if ((rows as any).length === 0) {
       return res.status(400).json({ message: "Email does not exist." });
     }
 
@@ -108,18 +108,15 @@ userRoutes.post(
       { expiresIn: "7d" }
     );
 
-    const salt = await bcrypt.genSalt(10);
-    const hashRefreshToken = await bcrypt.hash(refreshToken, salt);
-
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await connection.execute(
       "INSERT INTO refresh_token (user_id, token, expires_at) VALUES (?, ?, ?)",
-      [user.id, hashRefreshToken, expiresAt]
+      [user.id, refreshToken, expiresAt]
     );
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: false, //process.env.NODE_ENV === "production"
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -127,7 +124,7 @@ userRoutes.post(
   }
 );
 
-userRoutes.post("/refresh", async (req: Request, res: Response) => {
+userRoutes.post("/refresh-token", async (req: Request, res: Response) => {
   const refreshToken = req.cookies?.refreshToken;
 
   if (!refreshToken) {
@@ -140,36 +137,41 @@ userRoutes.post("/refresh", async (req: Request, res: Response) => {
       process.env.JWT_REFRESH_SECRET as string
     ) as { id: string; email: string };
 
+    
+
+    const [deleteResult] = await connection.execute("DELETE FROM refresh_token WHERE token = ?", [
+      refreshToken,
+    ]);
+
+    if ((deleteResult as any).affectedRows === 0) {
+      return res
+        .status(401)
+        .json({ message: "Invalid or already used refresh token." });
+    }
+
     const newRefreshToken = jwt.sign(
       { id: userInfo.id, email: userInfo.email },
       process.env.JWT_REFRESH_SECRET as string,
       { expiresIn: "7d" }
     );
 
-    await connection.execute("DELETE FROM refresh_token WHERE token = ?", [
-      refreshToken,
-    ]);
-
-    const salt = await bcrypt.genSalt(10);
-    const hashRefreshToken = await bcrypt.hash(newRefreshToken, salt);
-
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await connection.execute(
-      "INSERT INTO refresh_token (user_id, token, expires_at) VALUES (?, ?, ?)",
-      [userInfo.id, hashRefreshToken, expiresAt]
-    );
-
-    res.cookie("refreshToken", newRefreshToken, {
-      httpOnly: true,
-      secure: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
     const newAccessToken = jwt.sign(
       { id: userInfo.id, email: userInfo.email },
       process.env.JWT_ACCESS_SECRET as string,
       { expiresIn: "15m" }
     );
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await connection.execute(
+      "INSERT INTO refresh_token (user_id, token, expires_at) VALUES (?, ?, ?)",
+      [userInfo.id, newRefreshToken, expiresAt]
+    );
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: false,//process.env.NODE_ENV === "production"
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     res.status(200).json({ newAccessToken });
   } catch (error) {

@@ -1,8 +1,35 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {useForm} from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema, type RegisterInput } from "../utilities/schema";
+import axios from "axios";
+import { useState } from "react";
+import api from "../utilities/axiosConfig";
 
 const Signup = () => {
+  const {register, handleSubmit, formState: { errors }} =  useForm<RegisterInput>({resolver: zodResolver(registerSchema)});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>();
+  
+  const onSubmit = async (data: RegisterInput) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.post("/signup", data);
+      localStorage.setItem("accessToken", response.data.accessToken);
+    }
+    catch(err) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data.message || "Registration failed.");
+      } else {
+        setError("An unexpected error occurred.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <div className="flex items-center justify-center min-h-screen bg-purple-50">
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 bg-white shadow-2xl rounded-2xl overflow-hidden">
@@ -24,7 +51,7 @@ const Signup = () => {
           <h2 className="text-3xl font-bold mb-8 text-purple-800">
             Create Account
           </h2>
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <Label
                 htmlFor="name"
@@ -32,7 +59,8 @@ const Signup = () => {
               >
                 Name
               </Label>
-              <Input id="name" type="text" className="mt-1" />
+              <Input id="name" type="text" className="mt-1" {...register("name")}/>
+              {errors.name && <p className="text-red-600 text-sm">{errors.name.message}</p>}
             </div>
 
             <div>
@@ -42,7 +70,8 @@ const Signup = () => {
               >
                 Email
               </Label>
-              <Input id="email" type="email" className="mt-1" />
+              <Input id="email" type="email" className="mt-1" {...register("email")}/>
+              {errors.email && <p className="text-red-600 text-sm">{errors.email.message}</p>}
             </div>
 
             <div>
@@ -52,7 +81,8 @@ const Signup = () => {
               >
                 Password
               </Label>
-              <Input id="password" type="password" className="mt-1" />
+              <Input id="password" type="password" className="mt-1" {...register("password")} />
+              {errors.password && <p className="text-red-600 text-sm">{errors.password.message}</p>}
             </div>
 
             <div>
@@ -62,11 +92,12 @@ const Signup = () => {
               >
                 Confirm Password
               </Label>
-              <Input id="confirm-password" type="password" className="mt-1" />
+              <Input id="confirm-password" type="password" className="mt-1" {...register("confirmPassword")}/>
+              {errors.confirmPassword && <p className="text-red-600 text-sm">{errors.confirmPassword.message}</p>}
             </div>
-
-            <Button className="w-full bg-purple-800 hover:bg-purple-900 text-white rounded-md mt-4 cursor-pointer">
-              REGISTER
+            {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+            <Button type="submit" className="w-full bg-purple-800 hover:bg-purple-900 text-white rounded-md mt-4 cursor-pointer" disabled={loading}>
+              {loading ? "REGISTERING..." : "REGISTER"} 
             </Button>
           </form>
         </div>
