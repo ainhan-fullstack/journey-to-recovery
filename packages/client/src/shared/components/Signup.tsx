@@ -7,11 +7,13 @@ import { registerSchema, type RegisterInput } from "../utilities/schema";
 import axios from "axios";
 import { useState } from "react";
 import api from "../utilities/axiosConfig";
+ import { useNavigate } from 'react-router-dom';
 
 const Signup = () => {
   const {register, handleSubmit, formState: { errors }} =  useForm<RegisterInput>({resolver: zodResolver(registerSchema)});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>();
+  const navigate = useNavigate();
   
   const onSubmit = async (data: RegisterInput) => {
     setLoading(true);
@@ -28,6 +30,7 @@ const Signup = () => {
       }
     } finally {
       setLoading(false);
+      navigate("/profile-form");
     }
   }
   return (
@@ -57,10 +60,10 @@ const Signup = () => {
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-600"
               >
-                Name
+                User Name
               </Label>
-              <Input id="name" type="text" className="mt-1" {...register("name")}/>
-              {errors.name && <p className="text-red-600 text-sm">{errors.name.message}</p>}
+              <Input id="name" type="text" className="mt-1" {...register("username")}/>
+              {errors.username && <p className="text-red-600 text-sm">{errors.username.message}</p>}
             </div>
 
             <div>

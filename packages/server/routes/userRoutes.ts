@@ -18,7 +18,7 @@ userRoutes.post(
   "/signup",
   validateBody(registerSchema),
   async (req: Request, res: Response) => {
-    const { name, email, password }: RegisterInput = req.body;
+    const { username, email, password }: RegisterInput = req.body;
 
     //Check the email exists
     const [rows] = await connection.execute(
@@ -36,8 +36,8 @@ userRoutes.post(
     // Save the user to the db
     const userId: string = crypto.randomUUID();
     await connection.execute(
-      "INSERT INTO user(id, name, email, password) VALUES(?, ?, ?, ?)",
-      [userId, name, email, hashedPassword]
+      "INSERT INTO user(id, username, email, password) VALUES(?, ?, ?, ?)",
+      [userId, username, email, hashedPassword]
     );
 
     // Sign the access token

@@ -1,10 +1,17 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Signup from "./shared/components/Signup.tsx";
+import ProfileForm from "./shared/components/ProfileForm.tsx";
 
-createRoot(document.getElementById('root')!).render(
+const router = createBrowserRouter([
+  { path: "/", element: <Signup />,},
+  { path: "/profile-form", element: <ProfileForm /> },
+]);
+
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
-  </StrictMode>,
-)
+    <RouterProvider router={router}/>
+  </StrictMode>
+);

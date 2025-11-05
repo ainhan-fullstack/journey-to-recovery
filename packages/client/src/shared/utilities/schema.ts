@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 export const registerSchema = z.object({
-    name: z
+    username: z
         .string()
-        .min(2, { message: "Name must be at least 2 characters long." })
-        .max(32, { message: "Name cannot exceed 32 characters." }),
+        .min(8, { message: "Username must be at least 8 characters long." })
+        .max(32, { message: "Username cannot exceed 32 characters." }),
   email: z.email({ message: "Invalid email address." }),
   password: z
     .string()
@@ -25,3 +25,16 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export const loginSchema = registerSchema.omit({password: true, name: true, confirmPassword: true}).extend({password: z.string().nonempty({message: "Password is required"})});
 
 export type LoginInput = z.infer<typeof loginSchema>;
+
+export const profileFormSchema = z.object({
+  displayName: z.string()
+    .min(4, "Display name must be at least 4 characters.")
+    .max(32, "Display name must be no more than 32 characters."),
+  dateOfBirth: z.date({ message: "Please select a date." }),
+  gender: z.string({
+  }).min(1, "Please select a gender."),
+  meditationExperience: z.string({
+  }).min(1, "Please select an experience level."),
+});
+
+export type ProfileFormValues = z.infer<typeof profileFormSchema>;
