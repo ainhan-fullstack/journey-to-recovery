@@ -4,9 +4,11 @@ import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Signup from "./shared/components/Signup.tsx";
 import ProfileForm from "./shared/components/ProfileForm.tsx";
+import Login from "./shared/components/Login.tsx";
 
 const router = createBrowserRouter([
   { path: "/", element: <Signup />,},
+  { path: "/login", element: <Login />,},
   { path: "/profile-form", element: <ProfileForm /> },
 ]);
 

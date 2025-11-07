@@ -28,6 +28,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import api from "../utilities/axiosConfig";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function ProfileForm() {
   const form = useForm<ProfileFormValues>({
@@ -40,8 +44,30 @@ export default function ProfileForm() {
     },
   });
 
-  function onSubmit(values: ProfileFormValues) {
-    console.log("Form submitted:", values);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>();
+  const navigate = useNavigate();
+
+  async function onSubmit(values: ProfileFormValues) {
+    try {
+      await api.post("/profile", values);
+    } catch (err) {
+      
+      // LOG THE REAL ERROR to your browser console
+      console.error("API Call Failed:", err);
+      if (axios.isAxiosError(err)) {
+        console.error("Backend Response Data:", err.response?.data);
+      }
+
+      // Your existing logic
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data.message || "Update profile failed.");
+      } else {
+        setError("An unexpected error occurred.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   const inputStyle =
@@ -142,10 +168,10 @@ export default function ProfileForm() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                      <SelectItem value="prefer-not-to-say">
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                      <SelectItem value="Prefer-not-to-say">
                         Prefer not to say
                       </SelectItem>
                     </SelectContent>
@@ -175,22 +201,25 @@ export default function ProfileForm() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="beginner">Beginner</SelectItem>
-                      <SelectItem value="intermediate">Intermediate</SelectItem>
-                      <SelectItem value="advanced">Advanced</SelectItem>
+                      <SelectItem value="Beginner">Beginner</SelectItem>
+                      <SelectItem value="Intermediate">Intermediate</SelectItem>
+                      <SelectItem value="Advanced">Advanced</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
+            {error && (
+              <p className="text-red-600 text-sm text-center">{error}</p>
+            )}
             <div className="pt-4">
               <Button
                 className="w-full bg-blue-500 hover:bg-blue-600 h-12 text-lg rounded-lg cursor-pointer"
+                disabled={loading}
                 type="submit"
               >
-                Save
+                {loading ? "Save..." : "Save"}
               </Button>
             </div>
           </form>

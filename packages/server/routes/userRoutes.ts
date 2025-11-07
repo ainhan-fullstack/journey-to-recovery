@@ -1,13 +1,14 @@
 import express from "express";
 import type { Request, Response } from "express";
 import connection from "../db/connection";
-import { validateBody } from "../middleware/auth";
+import { authenticateToken, validateBody } from "../middleware/auth";
 import {
   registerSchema,
   type RegisterInput,
   loginSchema,
   type LoginInput,
-} from "../utilities/createUserSchema";
+  profileFormSchema,
+} from "../utilities/schema";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import type { User } from "../utilities/types";
@@ -18,7 +19,7 @@ userRoutes.post(
   "/signup",
   validateBody(registerSchema),
   async (req: Request, res: Response) => {
-    const { username, email, password }: RegisterInput = req.body;
+    const { email, password }: RegisterInput = req.body;
 
     //Check the email exists
     const [rows] = await connection.execute(
@@ -29,6 +30,7 @@ userRoutes.post(
     if ((rows as any).length > 0) {
       return res.status(400).json({ message: "Email already exists." });
     }
+
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -36,15 +38,15 @@ userRoutes.post(
     // Save the user to the db
     const userId: string = crypto.randomUUID();
     await connection.execute(
-      "INSERT INTO user(id, username, email, password) VALUES(?, ?, ?, ?)",
-      [userId, username, email, hashedPassword]
+      "INSERT INTO user(id, email, password) VALUES(?, ?, ?)",
+      [userId, email, hashedPassword]
     );
 
     // Sign the access token
     const accessToken = jwt.sign(
       { userId: userId, email: email },
       process.env.JWT_ACCESS_SECRET as string,
-      { expiresIn: "15m" }
+      { expiresIn: "1d" }
     );
 
     // Create and store the refresh token
@@ -98,7 +100,7 @@ userRoutes.post(
     const accessToken = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_ACCESS_SECRET as string,
-      { expiresIn: "15m" }
+      { expiresIn: "1d" }
     );
 
     // Create and store the refresh token
@@ -158,7 +160,7 @@ userRoutes.post("/refresh-token", async (req: Request, res: Response) => {
     const newAccessToken = jwt.sign(
       { id: userInfo.id, email: userInfo.email },
       process.env.JWT_ACCESS_SECRET as string,
-      { expiresIn: "15m" }
+      { expiresIn: "1d" }
     );
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -178,6 +180,14 @@ userRoutes.post("/refresh-token", async (req: Request, res: Response) => {
     console.log("Refresh token error:", error);
     res.status(500).json({ message: "Server error during token refresh." });
   }
+});
+
+userRoutes.post("/profile", authenticateToken, validateBody(profileFormSchema) , async (req: Request, res:Response) => {
+  const user = (req as any).user;
+  const {displayName, dateOfBirth, gender, meditationExperience} = req.body;
+
+  await connection.execute("UPDATE user SET name = ?, dob = ?, gender = ?, meditation_level = ? WHERE id = ?"
+    , [displayName, dateOfBirth, gender, meditationExperience, user.userId]);
 });
 
 userRoutes.post("/logout", async (req: Request, res: Response) => {

@@ -1,28 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {useForm} from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterInput } from "../utilities/schema";
 import axios from "axios";
 import { useState } from "react";
 import api from "../utilities/axiosConfig";
- import { useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from "react-router-dom";
 
 const Signup = () => {
-  const {register, handleSubmit, formState: { errors }} =  useForm<RegisterInput>({resolver: zodResolver(registerSchema)});
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>();
   const navigate = useNavigate();
-  
+
   const onSubmit = async (data: RegisterInput) => {
     setLoading(true);
     setError(null);
     try {
       const response = await api.post("/signup", data);
       localStorage.setItem("accessToken", response.data.accessToken);
-    }
-    catch(err) {
+      navigate("/profile-form");
+    } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
         setError(err.response.data.message || "Registration failed.");
       } else {
@@ -30,9 +34,8 @@ const Signup = () => {
       }
     } finally {
       setLoading(false);
-      navigate("/profile-form");
     }
-  }
+  };
   return (
     <div className="flex items-center justify-center min-h-screen bg-purple-50">
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 bg-white shadow-2xl rounded-2xl overflow-hidden">
@@ -41,13 +44,15 @@ const Signup = () => {
           <p className="mb-8 max-w-xs">
             Already have an account? Sign in to access your platform.
           </p>
-          <Button
-            variant="outline"
-            className="bg-transparent border-white text-white rounded-md
+          <NavLink to={"/login"}>
+            <Button
+              variant="outline"
+              className="bg-transparent border-white text-white rounded-md
                        hover:bg-white hover:text-purple-800 transition-colors cursor-pointer"
-          >
-            SIGN IN
-          </Button>
+            >
+              SIGN IN
+            </Button>
+          </NavLink>
         </div>
 
         <div className="p-12">
@@ -57,24 +62,20 @@ const Signup = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <Label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-600"
-              >
-                User Name
-              </Label>
-              <Input id="name" type="text" className="mt-1" {...register("username")}/>
-              {errors.username && <p className="text-red-600 text-sm">{errors.username.message}</p>}
-            </div>
-
-            <div>
-              <Label
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-600"
               >
                 Email
               </Label>
-              <Input id="email" type="email" className="mt-1" {...register("email")}/>
-              {errors.email && <p className="text-red-600 text-sm">{errors.email.message}</p>}
+              <Input
+                id="email"
+                type="email"
+                className="mt-1"
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="text-red-600 text-sm">{errors.email.message}</p>
+              )}
             </div>
 
             <div>
@@ -84,8 +85,17 @@ const Signup = () => {
               >
                 Password
               </Label>
-              <Input id="password" type="password" className="mt-1" {...register("password")} />
-              {errors.password && <p className="text-red-600 text-sm">{errors.password.message}</p>}
+              <Input
+                id="password"
+                type="password"
+                className="mt-1"
+                {...register("password")}
+              />
+              {errors.password && (
+                <p className="text-red-600 text-sm">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -95,12 +105,27 @@ const Signup = () => {
               >
                 Confirm Password
               </Label>
-              <Input id="confirm-password" type="password" className="mt-1" {...register("confirmPassword")}/>
-              {errors.confirmPassword && <p className="text-red-600 text-sm">{errors.confirmPassword.message}</p>}
+              <Input
+                id="confirm-password"
+                type="password"
+                className="mt-1"
+                {...register("confirmPassword")}
+              />
+              {errors.confirmPassword && (
+                <p className="text-red-600 text-sm">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
             </div>
-            {error && <p className="text-red-600 text-sm text-center">{error}</p>}
-            <Button type="submit" className="w-full bg-purple-800 hover:bg-purple-900 text-white rounded-md mt-4 cursor-pointer" disabled={loading}>
-              {loading ? "REGISTERING..." : "REGISTER"} 
+            {error && (
+              <p className="text-red-600 text-sm text-center">{error}</p>
+            )}
+            <Button
+              type="submit"
+              className="w-full bg-purple-800 hover:bg-purple-900 text-white rounded-md mt-4 cursor-pointer"
+              disabled={loading}
+            >
+              {loading ? "REGISTERING..." : "REGISTER"}
             </Button>
           </form>
         </div>

@@ -28,12 +28,11 @@ async function authenticateToken(req: Request, res: Response, next: NextFunction
 
   try {
     const [rows] = await connection.execute<RowDataPacket[]>("SELECT 1 FROM blacklisted_token WHERE token= ?", [token]);
-
     if (rows.length > 0) {
       return res.status(403).json({ message: 'Token has been invalidated.' })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET as string);
     (req as any).user = decoded;
     next();
   } catch (error) {
