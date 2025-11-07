@@ -6,8 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterInput } from "../utilities/schema";
 import axios from "axios";
 import { useState } from "react";
-import api from "../utilities/axiosConfig";
 import { NavLink, useNavigate } from "react-router-dom";
+import { postWithAuth } from "../utilities/auth";
 
 const Signup = () => {
   const {
@@ -23,8 +23,8 @@ const Signup = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post("/signup", data);
-      localStorage.setItem("accessToken", response.data.accessToken);
+      const response = await postWithAuth("/signup", data);
+      localStorage.setItem("accessToken", response?.data.accessToken);
       navigate("/profile-form");
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
@@ -34,6 +34,7 @@ const Signup = () => {
       }
     } finally {
       setLoading(false);
+      
     }
   };
   return (

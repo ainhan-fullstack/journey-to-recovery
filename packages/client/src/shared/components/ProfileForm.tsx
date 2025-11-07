@@ -33,7 +33,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+
 export default function ProfileForm() {
+  
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -51,6 +54,7 @@ export default function ProfileForm() {
   async function onSubmit(values: ProfileFormValues) {
     try {
       await api.post("/profile", values);
+      navigate("/dashboard");
     } catch (err) {
       
       // LOG THE REAL ERROR to your browser console
