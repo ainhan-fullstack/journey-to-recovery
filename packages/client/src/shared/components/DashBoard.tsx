@@ -1,7 +1,6 @@
 import { Flag, TreePine } from "lucide-react";
 import { GoalTracker } from "./GoalTracker";
 import { InfoCard } from "./InfoCard";
-import { NavBar } from "./NavBar";
 import { UserHeader } from "./UserHeader";
 
 export default function Dashboard() {
@@ -9,8 +8,6 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col min-h-screen bg-orange-50">
-      <NavBar />
-
       <main className="flex-grow p-6 w-full max-w-md mx-auto space-y-6">
         <UserHeader name={userName} progress={33} />
 

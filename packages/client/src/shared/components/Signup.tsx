@@ -34,7 +34,6 @@ const Signup = () => {
       }
     } finally {
       setLoading(false);
-      
     }
   };
   return (

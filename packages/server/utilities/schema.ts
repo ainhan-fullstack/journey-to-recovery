@@ -18,7 +18,7 @@ export const registerSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
-export const loginSchema = registerSchema.omit({password: true, name: true, confirmPassword: true}).extend({password: z.string().nonempty({message: "Password is required"})});
+export const loginSchema = registerSchema.omit({password: true, confirmPassword: true}).extend({password: z.string().nonempty({message: "Password is required"})});
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
