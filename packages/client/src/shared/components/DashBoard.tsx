@@ -2,18 +2,19 @@ import { Flag, TreePine } from "lucide-react";
 import { GoalTracker } from "./GoalTracker";
 import { InfoCard } from "./InfoCard";
 import { UserHeader } from "./UserHeader";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Dashboard() {
-  const userName = "Johnathan";
+  const { user } = useAuth();
 
   return (
     <div className="flex flex-col min-h-screen bg-orange-50">
       <main className="flex-grow p-6 w-full max-w-md mx-auto space-y-6">
-        <UserHeader name={userName} progress={33} />
+        <UserHeader name={user!.name!} progress={33} />
 
         <section className="space-y-1">
           <h1 className="text-2xl font-bold text-gray-900">
-            Hello, {userName}!
+            Hello, {user!.name}!
           </h1>
           <p className="text-gray-600">What would you like to do today?</p>
         </section>

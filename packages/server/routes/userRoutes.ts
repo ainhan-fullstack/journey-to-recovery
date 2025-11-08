@@ -44,14 +44,14 @@ userRoutes.post(
 
     // Sign the access token
     const accessToken = jwt.sign(
-      { userId: userId, email: email },
+      { id: userId, email: email },
       process.env.JWT_ACCESS_SECRET as string,
       { expiresIn: "1d" }
     );
 
     // Create and store the refresh token
     const refreshToken = jwt.sign(
-      { userId: userId, email: email },
+      { id: userId, email: email },
       process.env.JWT_REFRESH_SECRET as string,
       { expiresIn: "7d" }
     );
@@ -64,7 +64,7 @@ userRoutes.post(
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false,//process.env.NODE_ENV === "production"
+      secure: false, //process.env.NODE_ENV === "production"
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -139,11 +139,10 @@ userRoutes.post("/refresh-token", async (req: Request, res: Response) => {
       process.env.JWT_REFRESH_SECRET as string
     ) as { id: string; email: string };
 
-    
-
-    const [deleteResult] = await connection.execute("DELETE FROM refresh_token WHERE token = ?", [
-      refreshToken,
-    ]);
+    const [deleteResult] = await connection.execute(
+      "DELETE FROM refresh_token WHERE token = ?",
+      [refreshToken]
+    );
 
     if ((deleteResult as any).affectedRows === 0) {
       return res
@@ -171,7 +170,7 @@ userRoutes.post("/refresh-token", async (req: Request, res: Response) => {
 
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      secure: false,//process.env.NODE_ENV === "production"
+      secure: false, //process.env.NODE_ENV === "production"
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -182,13 +181,60 @@ userRoutes.post("/refresh-token", async (req: Request, res: Response) => {
   }
 });
 
-userRoutes.post("/profile", authenticateToken, validateBody(profileFormSchema) , async (req: Request, res:Response) => {
-  const user = (req as any).user;
-  const {displayName, dateOfBirth, gender, meditationExperience} = req.body;
+userRoutes.post(
+  "/profile",
+  authenticateToken,
+  validateBody(profileFormSchema),
+  async (req: Request, res: Response) => {
+    const user = (req as any).user;
 
-  await connection.execute("UPDATE user SET name = ?, dob = ?, gender = ?, meditation_level = ? WHERE id = ?"
-    , [displayName, dateOfBirth, gender, meditationExperience, user.userId]);
-});
+    if (!user) {
+      res.status(401).json({ message: "UnAuthorized." });
+    }
+
+    const { displayName, dateOfBirth, gender, meditationExperience } = req.body;
+
+    try {
+      await connection.execute(
+        "UPDATE user SET name = ?, dob = ?, gender = ?, meditation_level = ? WHERE id = ?",
+        [displayName, dateOfBirth, gender, meditationExperience, user.id]
+      );
+    } catch (err) {
+      res.status(500).json({ message: "Server error to update user info." });
+    }
+
+    res.status(200).json({ message: "Updated successfully." });
+  }
+);
+
+userRoutes.get(
+  "/profile",
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    const user = (req as any).user;
+
+    if (!user) {
+      res.status(401).json({ message: "UnAuthorized." });
+    }
+
+    try {
+      const [rows] = await connection.execute(
+        "Select id, email, name, dob, gender, meditation_level From user where id = ?",
+        [user.id]
+      );
+
+      if ((rows as any).length === 0) {
+        return res.status(404).json({ message: "User not found." });
+      }
+
+      const userInfo = (rows as any)[0];
+      res.status(200).json({ userInfo });
+    } catch (err) {
+      console.error("Failed to fetch user data:", err);
+      res.status(500).json({ message: "Server error to fetch user info." });
+    }
+  }
+);
 
 userRoutes.post("/logout", async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;

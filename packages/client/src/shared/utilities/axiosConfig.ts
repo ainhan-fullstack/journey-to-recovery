@@ -20,4 +20,34 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        const { data } = await api.post("/refresh-token");
+        const { newAccessToken } = data;
+        
+        localStorage.setItem("accessToken", newAccessToken);
+        
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+        
+        return api(originalRequest);
+
+      } catch (refreshError) {
+        console.error("Refresh token failed", refreshError);
+        localStorage.removeItem("accessToken");
+        window.location.href = '/login'; 
+        return Promise.reject(refreshError);
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
 export default api;

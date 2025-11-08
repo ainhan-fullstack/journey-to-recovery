@@ -13,13 +13,13 @@ export const router = createBrowserRouter([
     children: [
       { path: "signup", element: <Signup /> },
       { path: "login", element: <Login /> },
-    ],
-  },
-  {
-    element: <PrivateRoutes />,
-    children: [
-      { path: "/dashboard", element: <Dashboard /> },
-      { path: "/profile-form", element: <ProfileForm /> },
+      {
+        element: <PrivateRoutes />,
+        children: [
+          { index: true, element: <Dashboard /> },
+          { path: "profile", element: <ProfileForm /> },
+        ],
+      },
     ],
   },
 ]);

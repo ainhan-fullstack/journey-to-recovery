@@ -1,12 +1,12 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { isTokenValid } from "../utilities/auth";
 import { NavBar } from "../components/NavBar";
+import { useAuth } from "../contexts/AuthContext";
 
 const PrivateRoutes = () => {
-  const isLogined = isTokenValid();
+  const {isAuthenticated} = useAuth();
 
-  if (!isLogined) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace/>;
   }
   return (
     <>

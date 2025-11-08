@@ -29,23 +29,35 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import api from "../utilities/axiosConfig";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
 
 
 export default function ProfileForm() {
-  
+  const {user} = useAuth();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      displayName: "",
-      gender: "",
-      meditationExperience: "",
-      dateOfBirth: undefined,
+      displayName: user?.name || "",
+      gender: user?.gender || "",
+      meditationExperience: user?.meditation_level || "",
+      dateOfBirth: user?.dob || undefined,
     },
   });
+
+  useEffect(() => {
+    if(user) {
+      form.reset({
+        displayName: user.name,
+        gender: user.gender,
+        meditationExperience: user.meditation_level,
+        dateOfBirth: user.dob
+      });
+    }
+  }, [user, form]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>();
@@ -54,7 +66,7 @@ export default function ProfileForm() {
   async function onSubmit(values: ProfileFormValues) {
     try {
       await api.post("/profile", values);
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       
       // LOG THE REAL ERROR to your browser console

@@ -1,28 +1,5 @@
-import { jwtDecode } from "jwt-decode";
 import api from "../utilities/axiosConfig";
 
-interface TokenPayload {
-  userId: string;
-  email: string;
-  exp: number;
-}
-
-export const isTokenValid = (): boolean => {
-  const token = localStorage.getItem("accessToken");
-
-  if (!token) {
-    return false;
-  }
-
-  try {
-    const decode = jwtDecode<TokenPayload>(token);
-    const currentTime = Math.floor(Date.now() / 1000);
-
-    return decode.exp > currentTime;
-  } catch (err) {
-    return false;
-  }
-};
 
 let accessToken: string | null = null;
 

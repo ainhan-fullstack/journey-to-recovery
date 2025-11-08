@@ -2,28 +2,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { loginSchema, type LoginInput } from "../utilities/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { postWithAuth } from "../utilities/auth";
 import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
-   const {register, handleSubmit, formState: {errors}} = useForm<LoginInput>({resolver: zodResolver(loginSchema)}); 
-   const [loading, setLoading] = useState(false);
-   const [error, setError] = useState<null | string>(null);
-   const navigate = useNavigate();
+  const { login } = useAuth();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<null | string>(null);
 
-   const onSubmit = async (loginInfo: LoginInput) => {
+  const onSubmit = async (loginInfo: LoginInput) => {
     setLoading(true);
     setError(null);
-      try {
-        const response = await postWithAuth("/login", loginInfo);
-        localStorage.setItem("accessToken", response?.data.accessToken);
-        navigate('/dashboard');
-      } catch (err) {
+    try {
+      await login(loginInfo.email, loginInfo.password);
+    } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
         setError(err.response.data.message || "Registration failed.");
       } else {
@@ -32,8 +34,7 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
-   }
-   
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-purple-50">
@@ -64,7 +65,12 @@ const Login = () => {
               >
                 Email
               </Label>
-              <Input id="email" type="email" className="mt-1" {...register("email")} />
+              <Input
+                id="email"
+                type="email"
+                className="mt-1"
+                {...register("email")}
+              />
               {errors.email && (
                 <p className="text-red-600 text-sm">{errors.email.message}</p>
               )}
@@ -77,9 +83,16 @@ const Login = () => {
               >
                 Password
               </Label>
-              <Input id="password" type="password" className="mt-1" {...register("password")} />
+              <Input
+                id="password"
+                type="password"
+                className="mt-1"
+                {...register("password")}
+              />
               {errors.password && (
-                <p className="text-red-600 text-sm">{errors.password.message}</p>
+                <p className="text-red-600 text-sm">
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
@@ -105,8 +118,11 @@ const Login = () => {
               <p className="text-red-600 text-sm text-center">{error}</p>
             )}
 
-            <Button className="w-full bg-purple-800 hover:bg-purple-900 text-white rounded-md cursor-pointer" disabled={loading}>
-              { loading? "LOGIN..." : "LOGIN" }
+            <Button
+              className="w-full bg-purple-800 hover:bg-purple-900 text-white rounded-md cursor-pointer"
+              disabled={loading}
+            >
+              {loading ? "LOGIN..." : "LOGIN"}
             </Button>
           </form>
         </div>
