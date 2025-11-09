@@ -27,7 +27,7 @@ const Login = () => {
       await login(loginInfo.email, loginInfo.password);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data.message || "Registration failed.");
+        setError(err.response.data.message || "Login failed.");
       } else {
         setError("An unexpected error occurred.");
       }

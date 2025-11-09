@@ -69,13 +69,11 @@ export default function ProfileForm() {
       navigate("/");
     } catch (err) {
       
-      // LOG THE REAL ERROR to your browser console
       console.error("API Call Failed:", err);
       if (axios.isAxiosError(err)) {
         console.error("Backend Response Data:", err.response?.data);
       }
 
-      // Your existing logic
       if (axios.isAxiosError(err) && err.response) {
         setError(err.response.data.message || "Update profile failed.");
       } else {

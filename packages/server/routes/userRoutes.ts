@@ -22,13 +22,17 @@ userRoutes.post(
     const { email, password }: RegisterInput = req.body;
 
     //Check the email exists
-    const [rows] = await connection.execute(
-      "SELECT email FROM user WHERE email=?",
-      [email]
-    );
-
-    if ((rows as any).length > 0) {
-      return res.status(400).json({ message: "Email already exists." });
+    try {
+      const [rows] = await connection.execute(
+        "SELECT email FROM user WHERE email=?",
+        [email]
+      );
+      if ((rows as any).length > 0) {
+        return res.status(400).json({ message: "Email already exists." });
+      }
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Server Error." });
     }
 
     // Hash password

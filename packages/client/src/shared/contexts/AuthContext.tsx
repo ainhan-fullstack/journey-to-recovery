@@ -64,9 +64,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Signup function
   const signup = useCallback(
-    async (email: string, password: string) => {
+    async (email: string, password: string, confirmPassword: string) => {
       try {
-        const response = await api.post("/signup", { email, password });
+        const response = await api.post("/signup", { email, password, confirmPassword });
         const { accessToken } = response.data;
 
         localStorage.setItem("accessToken", accessToken);

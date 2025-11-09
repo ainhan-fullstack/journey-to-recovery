@@ -24,12 +24,19 @@ const Signup = () => {
     setLoading(true);
     setError(null);
     try {
-      await signup(data.email, data.password);
+      await signup(data.email, data.password, data.confirmPassword);
     } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
+        console.error("API Call Failed:", err);
+      if (axios.isAxiosError(err)) {
+        console.error("Backend Response Data:", err.response?.data);
+      }
+
       if (axios.isAxiosError(err) && err.response) {
         setError(err.response.data.message || "Registration failed.");
       } else {
         setError("An unexpected error occurred.");
+      }
       }
     } finally {
       setLoading(false);
