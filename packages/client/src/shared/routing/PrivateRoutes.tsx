@@ -11,7 +11,7 @@ const PrivateRoutes = () => {
   return (
     <>
       <NavBar />
-      <div id="main">
+      <div id="main" className="pt-0.5">
         <Outlet />
       </div>
     </>

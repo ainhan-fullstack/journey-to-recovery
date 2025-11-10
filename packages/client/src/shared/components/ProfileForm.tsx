@@ -44,7 +44,7 @@ export default function ProfileForm() {
       displayName: user?.name || "",
       gender: user?.gender || "",
       meditationExperience: user?.meditation_level || "",
-      dateOfBirth: user?.dob || undefined,
+      dateOfBirth: user?.dob ? new Date(user.dob) : undefined,
     },
   });
 
@@ -54,7 +54,7 @@ export default function ProfileForm() {
         displayName: user.name,
         gender: user.gender,
         meditationExperience: user.meditation_level,
-        dateOfBirth: user.dob
+        dateOfBirth: user.dob ? new Date(user.dob) : undefined
       });
     }
   }, [user, form]);

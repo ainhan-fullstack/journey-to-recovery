@@ -8,7 +8,7 @@ export default function Dashboard() {
   const { user } = useAuth();
 
   return (
-    <div className="flex flex-col min-h-screen bg-orange-50">
+    <div className="flex justify-center bg-orange-50 min-h-[calc(100vh-4.2rem)]">
       <main className="flex-grow p-6 w-full max-w-md mx-auto space-y-6">
         <UserHeader name={user!.name!} progress={33} />
 

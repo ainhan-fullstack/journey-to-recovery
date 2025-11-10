@@ -5,6 +5,7 @@ import ProfileForm from "../components/ProfileForm";
 import Dashboard from "../components/DashBoard";
 import PrivateRoutes from "./PrivateRoutes";
 import Layout from "../routing/Layout";
+import ExplorePage from "../components/ExplorePage";
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +19,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Dashboard /> },
           { path: "profile", element: <ProfileForm /> },
+          { path: "explore", element: <ExplorePage /> },
         ],
       },
     ],
