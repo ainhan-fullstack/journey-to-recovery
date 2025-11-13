@@ -8,9 +8,10 @@ interface InfoCardProps {
   title: string;
   actionText?: string;
   Icon?: LucideIcon;
+  onClick: () => void;
 }
 
-export function InfoCard({ preTitle, title, actionText, Icon }: InfoCardProps) {
+export function InfoCard({ preTitle, title, actionText, Icon, onClick }: InfoCardProps) {
   return (
     <Card className="bg-blue-600 text-white rounded-2xl shadow-lg overflow-hidden">
       <CardContent className="p-6">
@@ -19,7 +20,7 @@ export function InfoCard({ preTitle, title, actionText, Icon }: InfoCardProps) {
             <p className="text-sm">{preTitle}</p>
             <h3 className="text-2xl font-bold leading-tight">{title}</h3>
             {actionText && (
-              <Button variant="link" className="text-white p-0 text-lg font-semibold hover:no-underline cursor-pointer">
+              <Button onClick={onClick} variant="link" className="text-white p-0 text-lg font-semibold hover:no-underline cursor-pointer">
                 {actionText}
               </Button>
             )}

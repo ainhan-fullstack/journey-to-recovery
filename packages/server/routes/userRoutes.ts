@@ -350,9 +350,9 @@ userRoutes.post(
       );
       res.status(201).json({ message: "Check-in successful." });
     } catch (err: any) {
-      if (err.code === "ER_DUP_ENTRY") {
-        return res.status(409).json({ message: "Already checked in today." });
-      }
+      // if (err.code === "ER_DUP_ENTRY") {
+      //   return res.status(409).json({ message: "Already checked in today." });
+      // }
       console.error(err);
       res.status(500).json({ message: "Server error during check-in." });
     }

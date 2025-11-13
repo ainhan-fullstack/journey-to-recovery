@@ -34,7 +34,7 @@ export function GoalTracker() {
   }, [isAuthenticated, fetchWeekStatus]);
 
   const todayIndex = new Date().getDay();
-  const isTodayChecked = weekStatus[todayIndex];
+  // const isTodayChecked = weekStatus[todayIndex];
 
   return (
     <section className="space-y-5">
@@ -53,12 +53,12 @@ export function GoalTracker() {
 
             if (isChecked) {
               // Rule 1: "Big tick like the image"
-              nodeSize = "h-8 w-8"; // 32px
-              nodeColor = "bg-blue-500"; // Light blue circle
-              icon = <Check className="h-6 w-6 text-blue-900" />; // Dark blue tick
+              nodeSize = "h-8 w-8";
+              nodeColor = "bg-blue-500";
+              icon = <Check className="h-6 w-6 text-blue-900" />;
             } else {
               // Not checked in
-              nodeSize = "h-4 w-4"; // 16px (a "dot")
+              nodeSize = "h-4 w-4";
               icon = null;
 
               if (isFuture) {
@@ -101,13 +101,9 @@ export function GoalTracker() {
         variant="outline"
         className="w-full h-12 bg-white text-blue-600 border-2 border-blue-600 rounded-lg shadow-sm hover:bg-blue-50 text-base font-semibold cursor-pointer"
         onClick={() => navigate("/check-in")}
-        disabled={isTodayChecked || isLoading}
+        disabled={isLoading} //isTodayChecked || isLoading
       >
-        {isTodayChecked
-          ? "Checked in!"
-          : isLoading
-          ? "Loading..."
-          : "Daily check-in"}
+        {isLoading ? "Loading..." : "Daily check-in"}
       </Button>
     </section>
   );

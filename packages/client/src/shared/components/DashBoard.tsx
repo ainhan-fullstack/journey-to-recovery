@@ -3,9 +3,11 @@ import { GoalTracker } from "./GoalTracker";
 import { InfoCard } from "./InfoCard";
 import { UserHeader } from "./UserHeader";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="flex justify-center bg-orange-50 min-h-[calc(100vh-4.2rem)]">
@@ -26,12 +28,14 @@ export default function Dashboard() {
             preTitle="Find out about"
             title="Living your best life post-stroke"
             actionText="Start"
+            onClick={() => navigate("/welcome")}
             Icon={TreePine}
           />
           <InfoCard
             preTitle="Find out about"
             title="Get started setting my recovery goal"
             actionText="Start"
+            onClick={() => navigate("/welcome")}
             Icon={Flag}
           />
         </section>
