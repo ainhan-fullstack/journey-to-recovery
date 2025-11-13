@@ -35,7 +35,7 @@ export default function Dashboard() {
             preTitle="Find out about"
             title="Get started setting my recovery goal"
             actionText="Start"
-            onClick={() => navigate("/welcome")}
+            onClick={() => navigate("/getting-started")}
             Icon={Flag}
           />
         </section>
