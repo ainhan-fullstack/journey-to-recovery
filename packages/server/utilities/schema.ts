@@ -34,3 +34,7 @@ export const profileFormSchema = z.object({
 });
 
 export type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
+export const checkInSchema = z.object({
+  status: z.string().min(1, "Status is required."),
+});

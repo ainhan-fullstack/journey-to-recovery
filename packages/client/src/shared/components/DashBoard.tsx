@@ -10,7 +10,7 @@ export default function Dashboard() {
   return (
     <div className="flex justify-center bg-orange-50 min-h-[calc(100vh-4.2rem)]">
       <main className="flex-grow p-6 w-full max-w-md mx-auto space-y-6">
-        <UserHeader name={user!.name!} progress={33} />
+        <UserHeader name={user!.name!} progress={0} />
 
         <section className="space-y-1">
           <h1 className="text-2xl font-bold text-gray-900">

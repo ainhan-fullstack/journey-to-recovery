@@ -6,6 +6,8 @@ import Dashboard from "../components/DashBoard";
 import PrivateRoutes from "./PrivateRoutes";
 import Layout from "../routing/Layout";
 import ExplorePage from "../components/ExplorePage";
+import DailyCheckinPage from "../components/DailyCheckinPage";
+import CheckinConfirmationPage from "../components/CheckinConfirmationPage";
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +22,8 @@ export const router = createBrowserRouter([
           { index: true, element: <Dashboard /> },
           { path: "profile", element: <ProfileForm /> },
           { path: "explore", element: <ExplorePage /> },
+          { path: "check-in", element: <DailyCheckinPage /> },
+          { path: "check-in/confirm", element: <CheckinConfirmationPage /> },
         ],
       },
     ],

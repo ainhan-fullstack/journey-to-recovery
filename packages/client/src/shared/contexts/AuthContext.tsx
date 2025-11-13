@@ -17,16 +17,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  const fetchUser = async () => {
+  // const fetchUser = async () => {
+  //   try {
+  //     const response = await api.get("/profile");
+  //     setUser(response.data.userInfo);
+  //   } catch (error) {
+  //     localStorage.removeItem("accessToken");
+  //     setUser(null);
+  //     console.error("Failed to fetch user", error);
+  //   }
+  // };
+  const fetchUser = useCallback(async () => {
     try {
       const response = await api.get("/profile");
-      setUser(response.data.userInfo);
+      setUser(response.data.userInfo); // You had .user, but your backend sends .userInfo
     } catch (error) {
       localStorage.removeItem("accessToken");
       setUser(null);
       console.error("Failed to fetch user", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -40,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     };
     checkAuthStatus();
-  }, []);
+  }, [fetchUser]);
 
   // Login function
   const login = useCallback(
@@ -100,9 +110,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     signup,
     logout,
+    refetchUser: fetchUser,
   };
-
-  console.log(value);
 
   return (
     <AuthContext.Provider value={value}>

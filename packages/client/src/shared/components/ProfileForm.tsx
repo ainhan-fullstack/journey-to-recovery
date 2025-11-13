@@ -34,9 +34,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 
-
 export default function ProfileForm() {
-  const {user} = useAuth();
+  const { user, refetchUser } = useAuth();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -49,12 +48,12 @@ export default function ProfileForm() {
   });
 
   useEffect(() => {
-    if(user) {
+    if (user) {
       form.reset({
         displayName: user.name,
         gender: user.gender,
         meditationExperience: user.meditation_level,
-        dateOfBirth: user.dob ? new Date(user.dob) : undefined
+        dateOfBirth: user.dob ? new Date(user.dob) : undefined,
       });
     }
   }, [user, form]);
@@ -66,9 +65,9 @@ export default function ProfileForm() {
   async function onSubmit(values: ProfileFormValues) {
     try {
       await api.post("/profile", values);
+      await refetchUser();
       navigate("/");
     } catch (err) {
-      
       console.error("API Call Failed:", err);
       if (axios.isAxiosError(err)) {
         console.error("Backend Response Data:", err.response?.data);
