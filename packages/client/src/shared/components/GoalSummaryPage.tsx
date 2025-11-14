@@ -27,7 +27,7 @@ export default function GoalSummaryPage() {
   }
 
   const handleContinue = () => {
-    navigate("/goal-final-step", {
+    navigate("/set-reminder", {
       state: {
         overallGoal,
         smartGoal,

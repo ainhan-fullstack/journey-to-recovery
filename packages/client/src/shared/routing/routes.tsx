@@ -28,6 +28,9 @@ import ConfidenceRulerPage from "../components/ConfidenceRulerPage.tsx";
 import ConfidenceResultPage from "../components/ConfidenceResultPage.tsx";
 import ConfidenceWhyPage from "../components/ConfidenceWhyPage.tsx";
 import GoalSummaryPage from "../components/GoalSummaryPage.tsx";
+import SetReminderPage from "../components/SetReminderPage.tsx";
+import ReminderSchedulePage from "../components/ReminderSchedulePage.tsx";
+import DailyReminderPage from "../components/DailyReminderPage.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -64,6 +67,9 @@ export const router = createBrowserRouter([
           { path: "confidence-result", element: <ConfidenceResultPage /> },
           { path: "confidence-why", element: <ConfidenceWhyPage /> },
           { path: "goal-summary", element: <GoalSummaryPage /> },
+          { path: "set-reminder", element: <SetReminderPage /> },
+          { path: "reminder-schedule", element: <ReminderSchedulePage /> },
+          { path: "daily-reminder", element: <DailyReminderPage /> },
         ],
       },
     ],
