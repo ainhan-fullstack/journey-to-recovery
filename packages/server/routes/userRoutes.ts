@@ -282,8 +282,8 @@ function toYYYYMMDD(date: Date): string {
 
 function getLocalYYYYMMDD(date: Date) {
   const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
@@ -306,16 +306,16 @@ userRoutes.get(
     }
 
     try {
-      const placeholders = weekDates.map(() => '?').join(',');
+      const placeholders = weekDates.map(() => "?").join(",");
 
       const sqlQuery = `
         SELECT checkin_date 
         FROM daily_checkin 
         WHERE user_id = ? AND checkin_date IN (${placeholders})
       `;
-      
+
       const sqlValues = [user.id, ...weekDates];
-      
+
       const [rows] = await connection.execute<RowDataPacket[]>(
         sqlQuery,
         sqlValues
@@ -324,7 +324,7 @@ userRoutes.get(
       const checkedInDates = new Set(rows.map((row) => row.checkin_date));
 
       const weekStatus = weekDates.map((date) => checkedInDates.has(date));
-      
+
       res.status(200).json({ weekStatus });
     } catch (err) {
       console.error(err);
@@ -341,7 +341,7 @@ userRoutes.post(
     const user = (req as any).user;
     const { status } = req.body;
 
-    const todayDate =getLocalYYYYMMDD(new Date());
+    const todayDate = getLocalYYYYMMDD(new Date());
     const checkinId = crypto.randomUUID();
 
     try {
@@ -373,15 +373,25 @@ userRoutes.post(
       motivation,
       confidence,
       confidenceReason,
-      reminderType
+      reminderType,
     } = req.body;
-    
+
     const goalId = crypto.randomUUID();
 
     try {
       await connection.execute(
         "INSERT INTO goal (id, user_id, overall_goal, smart_goal, importance, motivation, confidence, confidence_reason, reminder_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [goalId, user.id, overallGoal, smartGoal, importance, motivation, confidence, confidenceReason, reminderType || 'none']
+        [
+          goalId,
+          user.id,
+          overallGoal || null,
+          smartGoal,
+          importance || null,
+          motivation || null,
+          confidence || null,
+          confidenceReason || null,
+          reminderType || "none",
+        ]
       );
       res.status(201).json({ message: "Goal saved successfully." });
     } catch (err: any) {

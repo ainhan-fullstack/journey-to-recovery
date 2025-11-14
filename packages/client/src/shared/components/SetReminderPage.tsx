@@ -21,7 +21,7 @@ export default function SetReminderPage() {
     if (selection === "yes") {
       navigate("/reminder-schedule", { state: allGoalData });
     } else {
-      navigate("/goal-final-summary", {
+      navigate("/goal-confirmation", {
         state: {
           ...allGoalData,
           reminderType: "none",

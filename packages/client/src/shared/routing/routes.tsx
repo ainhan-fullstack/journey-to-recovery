@@ -31,6 +31,7 @@ import GoalSummaryPage from "../components/GoalSummaryPage.tsx";
 import SetReminderPage from "../components/SetReminderPage.tsx";
 import ReminderSchedulePage from "../components/ReminderSchedulePage.tsx";
 import DailyReminderPage from "../components/DailyReminderPage.tsx";
+import GoalConfirmationPage from "../components/GoalConfirmationPage.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -70,6 +71,7 @@ export const router = createBrowserRouter([
           { path: "set-reminder", element: <SetReminderPage /> },
           { path: "reminder-schedule", element: <ReminderSchedulePage /> },
           { path: "daily-reminder", element: <DailyReminderPage /> },
+          { path: "goal-confirmation", element: <GoalConfirmationPage /> },
         ],
       },
     ],
