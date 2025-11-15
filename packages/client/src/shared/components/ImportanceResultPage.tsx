@@ -56,7 +56,7 @@ export default function ImportanceResultPage() {
           </p>
           <div className="mt-6">
             <LinkButton
-              to="/create-goal"
+              to="/existing-goal"
               text="I have a goal and want to..."
               Icon={Target}
             />

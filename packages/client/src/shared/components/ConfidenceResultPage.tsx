@@ -60,7 +60,7 @@ export default function ConfidenceResultPage() {
           </p>
           <div className="mt-6">
             <LinkButton
-              to="/smart-goal-form"
+              to="/existing-goal"
               text="I have a goal and want to m..."
               Icon={Target}
             />
