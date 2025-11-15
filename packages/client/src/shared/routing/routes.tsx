@@ -33,6 +33,12 @@ import ReminderSchedulePage from "../components/ReminderSchedulePage.tsx";
 import DailyReminderPage from "../components/DailyReminderPage.tsx";
 import GoalConfirmationPage from "../components/GoalConfirmationPage.tsx";
 import WeeklyReminderPage from "../components/WeeklyReminderPage.tsx";
+import StrengthsIntroPage from "../components/StrengthsIntroPage.tsx";
+import StrengthsFormPage from "../components/StrengthsFormPage.tsx";
+import StrengthsSummaryPage from "../components/StrengthsSummaryPage.tsx";
+import WellnessWheelIntroPage from "../components/WellnessWheelIntroPage.tsx";
+import WellnessWheelInstructionsPage from "../components/WellnessWheelInstructionsPage.tsx";
+import WellnessWheelFormPage from "../components/WellnessWheelFormPage.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -54,6 +60,12 @@ export const router = createBrowserRouter([
           { path: "getting-started", element: <GettingStartedPage /> },
           { path: "goal-prompt", element: <GoalPromptPage /> },
           { path: "existing-goal", element: <ExistingGoalPage /> },
+          { path: "strengths-intro", element: <StrengthsIntroPage /> },
+          { path: "strengths-form", element: <StrengthsFormPage /> },
+          { path: "strengths-summary", element: <StrengthsSummaryPage /> },
+          { path: "wellness-intro", element: <WellnessWheelIntroPage /> },
+          { path: "wellness-instructions", element: <WellnessWheelInstructionsPage /> },
+          { path: "wellness-wheel-form", element: <WellnessWheelFormPage /> },
           { path: "smart-goal", element: <SmartGoalPage /> },
           { path: "smart-goal-examples", element: <SmartGoalExamplesPage /> },
           { path: "smart-goal-intro", element: <SmartGoalFormIntroPage /> },

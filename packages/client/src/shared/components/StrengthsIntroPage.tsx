@@ -1,14 +1,12 @@
+// src/pages/StrengthsIntroPage.tsx
 import { Button } from "@/components/ui/button";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-export default function SmartGoalFormIntroPage() {
+export default function StrengthsIntroPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const goal = location.state?.goal;
 
   const handleContinue = () => {
-    navigate("/smart-goal-form", { state: { goal } });
+    navigate("/strengths-form");
   };
 
   return (
@@ -17,19 +15,16 @@ export default function SmartGoalFormIntroPage() {
         <div className="p-6 flex flex-col flex-grow">
           <div className="space-y-4 mt-8">
             <h1 className="text-3xl font-bold text-blue-800">
-              Your SMART Goal
+              Understanding your strengths
             </h1>
             <p className="text-gray-600 text-lg">
-              Now it’s time for you to create your own SMART goal.
+              Everyone has their own strengths that they bring to recovery
+              post-stroke. Understanding your strengths can help you to make
+              progress and overcome obstacles as you work towards living your
+              best life.
             </p>
             <p className="text-gray-600 text-lg">
-              Look at your overall goal and think about how you could break this
-              down into a{" "}
-              <strong className="font-semibold">
-                Specific, Measurable, Achievable, Relevant, and Time-Bound
-              </strong>{" "}
-              goal. Some people find it helpful to get a friend, family member,
-              or health professional to help them to write their SMART goal.
+              Let's explore your strengths.
             </p>
           </div>
 

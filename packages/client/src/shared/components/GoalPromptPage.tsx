@@ -16,15 +16,13 @@ export default function GoalPromptPage() {
     if (selection === "yes") {
       navigate("/existing-goal");
     } else {
-      navigate("/create-goal");
+      navigate("/strengths-intro");
     }
   };
 
   return (
     <div className="flex justify-center bg-orange-50 min-h-[calc(100vh-4rem)] p-6">
-      
       <div className="w-full max-w-md flex flex-col shadow-lg rounded-xl overflow-hidden bg-white">
-        
         <div className="relative p-6 flex flex-col flex-grow">
           <Button
             variant="ghost"
@@ -40,10 +38,14 @@ export default function GoalPromptPage() {
               Do you already have a goal?
             </h1>
             <p className="text-gray-600 text-lg">
-              Some people already know what they would like to achieve to live their best life post-stroke. Others are still exploring what this might look like.
+              Some people already know what they would like to achieve to live
+              their best life post-stroke. Others are still exploring what this
+              might look like.
             </p>
             <p className="text-gray-600 text-lg">
-              There are different pathways in the J2R App depending on whether or not you would like some support to identify a goal to work towards.
+              There are different pathways in the J2R App depending on whether
+              or not you would like some support to identify a goal to work
+              towards.
             </p>
           </div>
 
@@ -58,7 +60,8 @@ export default function GoalPromptPage() {
               className={cn(
                 "w-full h-auto p-4 justify-start text-lg rounded-xl border-gray-300",
                 "hover:bg-blue-50",
-                selection === "yes" && "border-blue-600 border-2 bg-blue-50 text-blue-700"
+                selection === "yes" &&
+                  "border-blue-600 border-2 bg-blue-50 text-blue-700"
               )}
             >
               Yes
@@ -70,7 +73,8 @@ export default function GoalPromptPage() {
               className={cn(
                 "w-full h-auto p-4 justify-start text-lg rounded-xl border-gray-300",
                 "hover:bg-blue-50",
-                selection === "no" && "border-blue-600 border-2 bg-blue-50 text-blue-700"
+                selection === "no" &&
+                  "border-blue-600 border-2 bg-blue-50 text-blue-700"
               )}
             >
               No

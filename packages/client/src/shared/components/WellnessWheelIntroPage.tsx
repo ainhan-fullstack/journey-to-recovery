@@ -1,14 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 
-export default function SmartGoalFormIntroPage() {
+export default function WellnessWheelIntroPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const goal = location.state?.goal;
+  const { strengths } = location.state || {};
+
+  if (!strengths) {
+    navigate("/strengths-form");
+    return null;
+  }
 
   const handleContinue = () => {
-    navigate("/smart-goal-form", { state: { goal } });
+    navigate("/wellness-instructions", {
+      state: {
+        strengths,
+      },
+    });
   };
 
   return (
@@ -17,19 +26,12 @@ export default function SmartGoalFormIntroPage() {
         <div className="p-6 flex flex-col flex-grow">
           <div className="space-y-4 mt-8">
             <h1 className="text-3xl font-bold text-blue-800">
-              Your SMART Goal
+              Now that you understand your strengths, next you'll complete the
+              Wellness Wheel.
             </h1>
             <p className="text-gray-600 text-lg">
-              Now it’s time for you to create your own SMART goal.
-            </p>
-            <p className="text-gray-600 text-lg">
-              Look at your overall goal and think about how you could break this
-              down into a{" "}
-              <strong className="font-semibold">
-                Specific, Measurable, Achievable, Relevant, and Time-Bound
-              </strong>{" "}
-              goal. Some people find it helpful to get a friend, family member,
-              or health professional to help them to write their SMART goal.
+              The Wellness Wheel will help you to identify areas in your life
+              that are going well, and ones that need more attention.
             </p>
           </div>
 

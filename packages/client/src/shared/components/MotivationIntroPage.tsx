@@ -1,4 +1,3 @@
-// src/pages/MotivationIntroPage.tsx
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 

@@ -1,14 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 
-export default function SmartGoalFormIntroPage() {
+export default function WellnessWheelInstructionsPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const goal = location.state?.goal;
+  const { strengths } = location.state || {};
+
+  if (!strengths) {
+    navigate("/strengths-form");
+    return null;
+  }
 
   const handleContinue = () => {
-    navigate("/smart-goal-form", { state: { goal } });
+    navigate("/wellness-wheel-form", {
+      state: {
+        strengths,
+      },
+    });
   };
 
   return (
@@ -17,19 +26,19 @@ export default function SmartGoalFormIntroPage() {
         <div className="p-6 flex flex-col flex-grow">
           <div className="space-y-4 mt-8">
             <h1 className="text-3xl font-bold text-blue-800">
-              Your SMART Goal
+              The Wellness Wheel
             </h1>
             <p className="text-gray-600 text-lg">
-              Now it’s time for you to create your own SMART goal.
+              The eight segments on the Wellness on the next page represent
+              different areas of your life. Select the images one at a time and
+              you will be provided with information about what each image
+              represents in your life.
             </p>
             <p className="text-gray-600 text-lg">
-              Look at your overall goal and think about how you could break this
-              down into a{" "}
-              <strong className="font-semibold">
-                Specific, Measurable, Achievable, Relevant, and Time-Bound
-              </strong>{" "}
-              goal. Some people find it helpful to get a friend, family member,
-              or health professional to help them to write their SMART goal.
+              Rate your level of satisfaction with each area out of 10. 1 means
+              you are struggling and feel unfulfilled in that area. 10 means
+              you're satisfied with that area and don't think it needs much
+              improvement. Go with your gut on this one.
             </p>
           </div>
 
@@ -40,7 +49,7 @@ export default function SmartGoalFormIntroPage() {
               className="w-full bg-blue-500 hover:bg-blue-600 h-12 text-lg rounded-lg"
               onClick={handleContinue}
             >
-              Continue
+              Finish
             </Button>
           </div>
         </div>
