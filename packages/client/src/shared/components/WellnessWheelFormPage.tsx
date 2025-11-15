@@ -14,7 +14,7 @@ import {
   HeartPulse,
   Home,
   Coins,
-  BarChart,
+  Briefcase,
   HelpingHand,
   Bike,
   Brain,
@@ -58,7 +58,7 @@ const segments = [
   {
     id: "career",
     title: "Career",
-    Icon: BarChart,
+    Icon: Briefcase,
     mainDescription: "Experiencing satisfaction with work.",
     ratingDescription:
       "Rate your wellbeing on a scale of 1-10. 1 means you are struggling and feel unfulfilled in that area. 10 means you're satisfied with that area and don't think it needs much improvement. If you'd like, you can also add text to explain your ranking.",

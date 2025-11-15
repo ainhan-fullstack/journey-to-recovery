@@ -17,7 +17,7 @@ export default function ExistingGoalPage() {
         <div className="bg-white p-6 flex flex-col flex-grow">
           <div className="space-y-4">
             <h1 className="text-3xl font-bold text-blue-800">
-              What you want to achieve
+              What would you like to achieve?
             </h1>
             <p className="text-gray-600 text-lg">
               You've indicated that you already have a goal in mind.

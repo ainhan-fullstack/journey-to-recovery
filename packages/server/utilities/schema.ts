@@ -61,3 +61,15 @@ export const goalSchema = z.object({
   confidenceReason: z.string().optional(),
   reminderType: z.string().optional(),
 });
+
+export const wellnessSchema = z.object({
+  wellnessRatings: z.record(z.string(), z.number()),
+  wellnessExplanations: z.record(z.string(), z.string()),
+  focusArea: z.string().min(1, "Focus area is required."),
+  strengths: z.object({
+    values: z.string().min(1, "The answer is required."),
+    goodAt: z.string().min(1, "The answer is required."),
+    overcome: z.string().min(1, "The answer is required."),
+    valuedFor: z.string().min(1, "The answer is required."),
+  }),
+});

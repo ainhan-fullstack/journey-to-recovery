@@ -39,6 +39,8 @@ import StrengthsSummaryPage from "../components/StrengthsSummaryPage.tsx";
 import WellnessWheelIntroPage from "../components/WellnessWheelIntroPage.tsx";
 import WellnessWheelInstructionsPage from "../components/WellnessWheelInstructionsPage.tsx";
 import WellnessWheelFormPage from "../components/WellnessWheelFormPage.tsx";
+import WellnessWheelSummaryPage from "../components/WellnessWheelSummaryPage.tsx";
+import NewGoalIntroPage from "../components/NewGoalIntroPage.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -66,6 +68,8 @@ export const router = createBrowserRouter([
           { path: "wellness-intro", element: <WellnessWheelIntroPage /> },
           { path: "wellness-instructions", element: <WellnessWheelInstructionsPage /> },
           { path: "wellness-wheel-form", element: <WellnessWheelFormPage /> },
+          { path: "wellness-summary", element: <WellnessWheelSummaryPage /> },
+          { path: "new-goal-intro", element: <NewGoalIntroPage /> },
           { path: "smart-goal", element: <SmartGoalPage /> },
           { path: "smart-goal-examples", element: <SmartGoalExamplesPage /> },
           { path: "smart-goal-intro", element: <SmartGoalFormIntroPage /> },
