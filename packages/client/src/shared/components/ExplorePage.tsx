@@ -2,11 +2,11 @@ import ExploreItem from "./ExploreItem";
 import SearchBar from "./SearchBar";
 
 const exploreItems = [
-  { title: "Living Your Best Life Post-Stroke" },
-  { title: "Getting Started" },
-  { title: "How to use Journey to Recovery" },
-  { title: "Create a new SMART goal" },
-  { title: "Create a new overall goal and ma..." },
+  { title: "Living Your Best Life Post-Stroke", link: "/welcome" },
+  { title: "Getting Started", link: "/goal-options" },
+  { title: "How to use Journey to Recovery", link: "/welcome" },
+  { title: "Create a new SMART goal", link: "/existing-goal" },
+  { title: "Create a new overall goal and ma...", link: "/strengths-intro" },
 ];
 
 const ExplorePage = () => {
@@ -19,7 +19,7 @@ const ExplorePage = () => {
 
         <div className="bg-white">
           {exploreItems.map((item, index) => (
-            <ExploreItem key={index} title={item.title} />
+            <ExploreItem key={index} title={item.title} link={item.link} />
           ))}
         </div>
       </div>

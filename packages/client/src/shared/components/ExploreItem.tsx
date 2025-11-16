@@ -1,7 +1,9 @@
 import { ChevronRight, Heart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ExploreItemProps {
   title: string;
+  link: string;
 }
 
 const LogoPlaceholder = () => (
@@ -10,9 +12,13 @@ const LogoPlaceholder = () => (
   </div>
 );
 
-const ExploreItem = ({ title }: ExploreItemProps) => {
+const ExploreItem = ({ title, link }: ExploreItemProps) => {
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate(link);
+  }
   return (
-    <button className="flex items-center w-full p-4 space-x-4 border-b border-gray-200 hover:bg-gray-50">
+    <button onClick={handleClick} className="flex items-center w-full p-4 space-x-4 border-b border-gray-200 hover:bg-gray-50">
       <LogoPlaceholder />
       <span className="flex-grow text-left text-lg font-medium text-gray-800">
         {title}
