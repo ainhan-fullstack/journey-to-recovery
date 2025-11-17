@@ -11,11 +11,15 @@ import {
   checkInSchema,
   goalSchema,
   wellnessSchema,
+  chatSchema,
 } from "../utilities/schema";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import type { User } from "../utilities/types";
 import type { RowDataPacket } from "mysql2/promise";
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const userRoutes = express.Router();
 
@@ -352,9 +356,6 @@ userRoutes.post(
       );
       res.status(201).json({ message: "Check-in successful." });
     } catch (err: any) {
-      // if (err.code === "ER_DUP_ENTRY") {
-      //   return res.status(409).json({ message: "Already checked in today." });
-      // }
       console.error(err);
       res.status(500).json({ message: "Server error during check-in." });
     }
@@ -472,6 +473,36 @@ userRoutes.post(
     } catch (err: any) {
       console.error("Failed to save wellness summary:", err);
       return res.status(500).json({ message: "Server error saving summary." });
+    }
+  }
+);
+
+userRoutes.post(
+  "/chat",
+  authenticateToken,
+  validateBody(chatSchema),
+  async (req: Request, res: Response) => {
+    const { prompt, conversationId } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({ message: "Prompt is required." });
+    }
+
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          maxOutputTokens: 200,
+        },
+      });
+
+      const text = response.text;
+
+      res.status(200).json({ generatedText: text });
+    } catch (err) {
+      console.error("Gemini API Error:", err);
+      res.status(500).json({ message: "Error communicating with AI." });
     }
   }
 );

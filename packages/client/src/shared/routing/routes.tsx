@@ -42,6 +42,7 @@ import WellnessWheelFormPage from "../components/WellnessWheelFormPage.tsx";
 import WellnessWheelSummaryPage from "../components/WellnessWheelSummaryPage.tsx";
 import NewGoalIntroPage from "../components/NewGoalIntroPage.tsx";
 import GoalOptionsPage from "../components/GoalOptionsPage.tsx";
+import ChatBot from "../components/ChatBot.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -92,6 +93,7 @@ export const router = createBrowserRouter([
           { path: "weekly-reminder", element: <WeeklyReminderPage /> },
           { path: "goal-confirmation", element: <GoalConfirmationPage /> },
           { path: "goal-options", element: <GoalOptionsPage /> },
+          { path: "chatbot", element: <ChatBot /> },
         ],
       },
     ],
