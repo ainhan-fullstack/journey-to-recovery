@@ -477,18 +477,97 @@ userRoutes.post(
   }
 );
 
+const generateTitle = (prompt: string) => {
+  return prompt.slice(0, 30) + (prompt.length > 30 ? "..." : "");
+};
+
+userRoutes.get(
+  "/conversations",
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const [rows] = await connection.execute(
+        "SELECT * FROM conversations WHERE user_id = ? ORDER BY updated_at DESC",
+        [user.id]
+      );
+      res.json(rows);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Failed to fetch history" });
+    }
+  }
+);
+
+userRoutes.get(
+  "/conversations/:id",
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const conversationId = req.params.id;
+      const user = (req as any).user;
+
+      const [conversations] = await connection.execute<RowDataPacket[]>(
+        "SELECT id FROM conversations WHERE id = ? AND user_id = ?",
+        [conversationId, user.id]
+      );
+
+      if (conversations.length === 0) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+
+      const [messages] = await connection.query(
+        "SELECT content, role FROM messages WHERE conversation_id = ? ORDER BY created_at ASC",
+        [conversationId]
+      );
+
+      res.json(messages);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  }
+);
+
 userRoutes.post(
   "/chat",
   authenticateToken,
   validateBody(chatSchema),
   async (req: Request, res: Response) => {
     const { prompt, conversationId } = req.body;
+    const user = (req as any).user;
 
     if (!prompt) {
       return res.status(400).json({ message: "Prompt is required." });
     }
 
+    const chatConnection = await connection.getConnection();
+
     try {
+      await chatConnection.beginTransaction();
+
+      const [existingConv] = await chatConnection.query<RowDataPacket[]>(
+        "SELECT id FROM conversations WHERE id = ?",
+        [conversationId]
+      );
+
+      if (existingConv.length === 0) {
+        await chatConnection.query(
+          "INSERT INTO conversations (id, user_id, title) VALUES (?, ?, ?)",
+          [conversationId, user.id, generateTitle(prompt)]
+        );
+      } else {
+        await chatConnection.query(
+          "UPDATE conversations SET updated_at = NOW() WHERE id = ?",
+          [conversationId]
+        );
+      }
+
+      await chatConnection.query(
+        "INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)",
+        [conversationId, "user", prompt]
+      );
+
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: prompt,
@@ -497,12 +576,22 @@ userRoutes.post(
         },
       });
 
-      const text = response.text;
+      const botText = response.text;
 
-      res.status(200).json({ generatedText: text });
+      await chatConnection.query(
+        "INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)",
+        [conversationId, "bot", botText]
+      );
+
+      await chatConnection.commit();
+
+      res.status(200).json({ generatedText: botText });
     } catch (err) {
+      await chatConnection.rollback();
       console.error("Gemini API Error:", err);
       res.status(500).json({ message: "Error communicating with AI." });
+    } finally {
+      chatConnection.release();
     }
   }
 );
