@@ -572,7 +572,9 @@ userRoutes.post(
         model: "gemini-2.5-flash",
         contents: prompt,
         config: {
-          maxOutputTokens: 200,
+          maxOutputTokens: 1000,
+          systemInstruction:
+            "You are a helpful rehabilitation assistant for stroke survivors. Keep your answers encouraging, simple to understand, and concise. Avoid overly complex medical jargon.",
         },
       });
 
@@ -596,12 +598,31 @@ userRoutes.post(
   }
 );
 
-userRoutes.get("/test-db", async (req: Request, res: Response) => {
-  const [rows] = await connection.execute("SELECT 1 + 1 as solution");
-  res.json({
-    message: "Database connection successful!",
-    solution: (rows as any)[0].solution,
-  });
-});
+userRoutes.delete(
+  "/conversations/:id",
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const conversationId = req.params.id;
+      const user = (req as any).user;
+
+      const [result] = await connection.query<any>(
+        "DELETE FROM conversations WHERE id = ? AND user_id = ?",
+        [conversationId, user.id]
+      );
+
+      if (result.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ message: "Conversation not found or not authorized" });
+      }
+
+      res.json({ message: "Conversation deleted" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Failed to delete conversation" });
+    }
+  }
+);
 
 export default userRoutes;

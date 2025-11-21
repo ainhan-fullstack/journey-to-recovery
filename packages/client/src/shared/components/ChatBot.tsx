@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import popSound from "@/assets/sounds/pop.mp3";
 import notificationSound from "@/assets/sounds/notification.mp3";
 import ChatInput, { type ChatFormData } from "./ChatInput";
@@ -30,7 +30,6 @@ const ChatBot = () => {
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [error, setError] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  //const conversationId = useRef(crypto.randomUUID());
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string>(
     crypto.randomUUID()
@@ -70,33 +69,22 @@ const ChatBot = () => {
     }
   };
 
-  // const onSubmit = async ({ prompt }: ChatFormData) => {
-  //   try {
-  //     setMessages((prev) => [...prev, { content: prompt, role: "user" }]);
-  //     setIsBotTyping(true);
-  //     setError("");
-  //     popAudio.play();
+  const handleDeleteConversation = async (id: string) => {
+    try {
+      await api.delete(`/conversations/${id}`);
 
-  //     const { data } = await api.post<ChatResponse>("/chat", {
-  //       prompt,
-  //       conversationId: conversationId.current,
-  //     });
-  //     setMessages((prev) => [
-  //       ...prev,
-  //       { content: data.generatedText, role: "bot" },
-  //     ]);
-  //     notificationAudio.play();
-  //   } catch (error) {
-  //     console.error(error);
-  //     setError("Something went wrong, try again!");
-  //   } finally {
-  //     setIsBotTyping(false);
-  //   }
-  // };
+      setConversations((prev) => prev.filter((c) => c.id !== id));
 
+      if (id === activeConversationId) {
+        handleNewChat();
+      }
+    } catch (err) {
+      console.error("Failed to delete chat", err);
+      setError("Could not delete conversation");
+    }
+  };
   const onSubmit = async ({ prompt }: ChatFormData) => {
     try {
-      // Optimistic Update
       const newMsg: Message = { content: prompt, role: "user" };
       setMessages((prev) => [...prev, newMsg]);
       setIsBotTyping(true);
@@ -112,7 +100,6 @@ const ChatBot = () => {
       setMessages((prev) => [...prev, botMsg]);
       notificationAudio.play();
 
-      // Refresh history list (to show new chat title or move to top)
       fetchConversations();
     } catch (error) {
       console.error(error);
@@ -122,32 +109,18 @@ const ChatBot = () => {
     }
   };
 
-  // return (
-  //   <div className="p-4 h-[calc(100vh-4.5rem)] w-full">
-  //     <div className="flex flex-col h-full">
-  //       <div className="flex flex-col flex-1 gap-3 mb-5 overflow-y-auto justify-end">
-  //         <ChatMessages messages={messages} />
-  //         {isBotTyping && <TypingIndicator />}
-  //         {error && <p className="text-red-500">{error}</p>}
-  //       </div>
-  //       <ChatInput onSubmit={onSubmit} />
-  //     </div>
-  //   </div>
-  // );
   return (
     <div className="relative flex h-[calc(100vh-4.5rem)] w-full bg-white overflow-hidden">
-      {/* Sidebar */}
       <ChatSidebar
         isOpen={isSidebarOpen}
         conversations={conversations}
         activeId={activeConversationId}
         onSelectConversation={handleSelectConversation}
         onNewChat={handleNewChat}
+        onDeleteConversation={handleDeleteConversation}
       />
 
-      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-full min-w-0">
-        {/* Header / Toolbar */}
         <div className="flex items-center p-2 md:p-4">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -160,7 +133,6 @@ const ChatBot = () => {
           </span>
         </div>
 
-        {/* Messages Area */}
         <div className="flex flex-col flex-1 p-4 overflow-hidden max-w-3xl w-full mx-auto">
           <div className="flex flex-col flex-1 gap-3 mb-5 overflow-y-auto">
             {messages.length === 0 ? (
@@ -177,7 +149,6 @@ const ChatBot = () => {
             {error && <p className="text-red-500 text-center">{error}</p>}
           </div>
 
-          {/* Input */}
           <div className="w-full">
             <ChatInput onSubmit={onSubmit} />
           </div>
