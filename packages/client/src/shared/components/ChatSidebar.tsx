@@ -41,7 +41,7 @@ const ChatSidebar = ({
     <>
       {openMenuId && (
         <div
-          className="fixed inset-0 z-30 bg-transparent"
+          className="fixed inset-0 z-10 bg-transparent"
           onClick={() => setOpenMenuId(null)}
         />
       )}
@@ -108,12 +108,11 @@ const ChatSidebar = ({
                 <MoreVertical className="w-4 h-4" />
               </button>
 
-              {/* Dropdown Menu */}
               {openMenuId === conv.id && (
                 <div className="absolute right-0 top-8 z-40 w-32 bg-white border border-gray-200 rounded-lg shadow-lg py-1">
                   <button
                     onClick={(e) => handleDelete(e, conv.id)}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer"
                   >
                     <Trash className="w-4 h-4" />
                     Delete

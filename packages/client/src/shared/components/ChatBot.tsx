@@ -5,9 +5,9 @@ import ChatInput, { type ChatFormData } from "./ChatInput";
 import type { Message } from "./ChatMessages";
 import ChatMessages from "./ChatMessages";
 import TypingIndicator from "./TypingIndicator";
-import api from "../utilities/axiosConfig";
 import { Menu } from "lucide-react";
 import ChatSidebar from "./ChatSidebar";
+import api from "../utilities/axiosConfig";
 
 const popAudio = new Audio(popSound);
 popAudio.volume = 0.2;
