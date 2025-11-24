@@ -34,11 +34,13 @@ const ChatMessages = ({ messages }: Props) => {
           ref={index === messages.length - 1 ? lastMessageRef : null}
           className={`px-3 py-1 max-w-md rounded-xl prose ${
             message.role === "user"
-              ? "bg-blue-600 text-white self-end"
-              : "bg-gray-100 text-black self-start"
+              ? "bg-blue-600 text-white self-end rounded-br-none"
+              : "bg-gray-100 text-black self-start rounded-bl-none"
           }`}
         >
-          <ReactMarkdown>{message.content}</ReactMarkdown>
+          <div className="prose prose-sm md:prose-base max-w-none dark:prose-invert break-words">
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
         </div>
       ))}
     </div>

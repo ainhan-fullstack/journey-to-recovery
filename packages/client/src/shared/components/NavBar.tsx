@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Home, BookOpen, User } from "lucide-react";
+import { Home, BookOpen, User, MessageSquare } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +32,20 @@ export function NavBar() {
             >
               <BookOpen className="h-6 w-6" />
               <span className="text-xs font-medium">Explore</span>
+            </Button>
+          )}
+        </NavLink>
+        <NavLink to={"/chatbot"}>
+          {({ isActive }) => (
+            <Button
+              variant="ghost"
+              className={cn(
+                "flex flex-col items-center space-y-1 h-auto p-2 cursor-pointer",
+                isActive ? "text-blue-600" : "text-gray-500"
+              )}
+            >
+              <MessageSquare className="h-6 w-6" />
+              <span className="text-xs font-medium">Virtual Assistant</span>
             </Button>
           )}
         </NavLink>

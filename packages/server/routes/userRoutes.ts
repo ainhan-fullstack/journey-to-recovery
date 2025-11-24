@@ -18,6 +18,11 @@ import bcrypt from "bcryptjs";
 import type { User } from "../utilities/types";
 import type { RowDataPacket } from "mysql2/promise";
 import { GoogleGenAI } from "@google/genai";
+import {
+  REHAB_LINH_SYSTEM_PROMPT,
+  type SMARTGoalResponse,
+} from "../utilities/prompt.config";
+import { calculateRisk } from "../utilities/riskCalculator";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -570,24 +575,59 @@ userRoutes.post(
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: prompt,
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
         config: {
           maxOutputTokens: 1000,
-          systemInstruction:
-            "You are a helpful rehabilitation assistant for stroke survivors. Keep your answers encouraging, simple to understand, and concise. Avoid overly complex medical jargon.",
+          temperature: 0.2,
+          systemInstruction: REHAB_LINH_SYSTEM_PROMPT,
+          responseMimeType: "application/json",
         },
       });
 
-      const botText = response.text;
+      const rawText = response.text;
+
+      if (!rawText) {
+        throw new Error("No response text from AI model");
+      }
+
+      let botResponseText = "";
+      let riskAnalysis = null;
+      let parsedData: SMARTGoalResponse | null = null;
+
+      try {
+        // Clean markdown if Gemini adds it
+        const cleanJson = rawText.replace(/```json|```/g, "").trim();
+        parsedData = JSON.parse(cleanJson) as SMARTGoalResponse;
+
+        // Run Risk Calculation
+        riskAnalysis = calculateRisk(parsedData.smart_data);
+
+        // Construct the message for the user
+        botResponseText = `${parsedData.user_communication.message}\n\n${parsedData.user_communication.question}`;
+
+        // If risk is high, append a safety note
+        if (riskAnalysis.level === "HIGH" || parsedData.risk_flag) {
+          botResponseText +=
+            "\n\n*(Note: This goal seems quite challenging based on current data. We will proceed carefully.)*";
+        }
+      } catch (parseError) {
+        console.error("JSON Parse Error:", parseError);
+        botResponseText = rawText;
+      }
 
       await chatConnection.query(
         "INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)",
-        [conversationId, "bot", botText]
+        [conversationId, "bot", botResponseText]
       );
 
       await chatConnection.commit();
 
-      res.status(200).json({ generatedText: botText });
+      res.status(200).json({ generatedText: botResponseText });
     } catch (err) {
       await chatConnection.rollback();
       console.error("Gemini API Error:", err);
