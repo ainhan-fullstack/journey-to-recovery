@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: "https://server-production-1696.up.railway.app/api",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -27,25 +27,24 @@ api.interceptors.response.use(
 
     if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
         const { data } = await api.post("/refresh-token");
         const { newAccessToken } = data;
-        
-        localStorage.setItem("accessToken", newAccessToken);
-        
-        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
-        
-        return api(originalRequest);
 
+        localStorage.setItem("accessToken", newAccessToken);
+
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+
+        return api(originalRequest);
       } catch (refreshError) {
         console.error("Refresh token failed", refreshError);
         localStorage.removeItem("accessToken");
-        window.location.href = '/login'; 
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
