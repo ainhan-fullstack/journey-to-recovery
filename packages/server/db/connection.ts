@@ -1,7 +1,7 @@
 import mysql from "mysql2/promise";
 import dbConfig from "../config/db.config";
 
-const urlDB = `mysql://root:uDYwwhWKNaPQtKquiLLaPlEnKKMCZLpn@maglev.proxy.rlwy.net:52221/railway`;
+const urlDB = `mysql://${process.env.MYSQLUSER}:${process.env.MYSQL_ROOT_PASSWORD}@${process.env.RAILWAY_TCP_PROXY_DOMAIN}:${process.env.RAILWAY_TCP_PROXY_PORT}/${process.env.MYSQL_DATABASE}`;
 
 const pool = mysql.createPool(urlDB);
 // const pool = mysql.createPool({
