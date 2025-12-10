@@ -18,6 +18,7 @@ import bcrypt from "bcryptjs";
 import type { User } from "../utilities/types";
 import type { RowDataPacket } from "mysql2/promise";
 import { GoogleGenAI } from "@google/genai";
+import type { Content } from "@google/genai";
 import {
   REHAB_LINH_SYSTEM_PROMPT,
   type SMARTGoalResponse,
@@ -573,14 +574,19 @@ userRoutes.post(
         [conversationId, "user", prompt]
       );
 
+      const [historyRows] = await chatConnection.query<RowDataPacket[]>(
+        "SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY created_at ASC",
+        [conversationId]
+      );
+
+      const historyForGemini = historyRows.map((msg: any) => ({
+        role: msg.role === "bot" ? "model" : "user",
+        parts: [{ text: msg.content }],
+      }));
+
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
-          },
-        ],
+        contents: historyForGemini,
         config: {
           maxOutputTokens: 1000,
           temperature: 0.2,
