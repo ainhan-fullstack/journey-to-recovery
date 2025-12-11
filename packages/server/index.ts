@@ -4,6 +4,7 @@ import cors from "cors";
 
 const corsOptions = {
   origin: ["https://willowy-tartufo-ba9677.netlify.app"],
+  // origin: ["http://localhost:5173"],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
   optionsSuccessStatus: 204,

@@ -574,12 +574,13 @@ userRoutes.post(
         [conversationId, "user", prompt]
       );
 
+      const historyLimit = 15;
       const [historyRows] = await chatConnection.query<RowDataPacket[]>(
-        "SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY created_at ASC",
-        [conversationId]
+        "SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY created_at DESC LIMIT ?",
+        [conversationId, historyLimit]
       );
 
-      const historyForGemini = historyRows.map((msg: any) => ({
+      const historyForGemini = historyRows.reverse().map((msg: any) => ({
         role: msg.role === "bot" ? "model" : "user",
         parts: [{ text: msg.content }],
       }));
@@ -587,6 +588,12 @@ userRoutes.post(
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: historyForGemini,
+        // contents: [
+        //   {
+        //     role: "user",
+        //     parts: [{ text: prompt }],
+        //   },
+        // ],
         config: {
           maxOutputTokens: 1000,
           temperature: 0.2,
