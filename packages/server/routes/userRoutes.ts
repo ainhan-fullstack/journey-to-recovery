@@ -595,7 +595,7 @@ userRoutes.post(
         //   },
         // ],
         config: {
-          maxOutputTokens: 1000,
+          maxOutputTokens: 5000,
           temperature: 0.2,
           systemInstruction: REHAB_LINH_SYSTEM_PROMPT,
           responseMimeType: "application/json",
@@ -614,14 +614,31 @@ userRoutes.post(
 
       try {
         // Clean markdown if Gemini adds it
-        const cleanJson = rawText.replace(/```json|```/g, "").trim();
+        //const cleanJson = rawText.replace(/```json|```/g, "").trim();
+        //parsedData = JSON.parse(cleanJson) as SMARTGoalResponse;
+
+        const firstBrace = rawText.indexOf("{");
+        const lastBrace = rawText.lastIndexOf("}");
+
+        if (firstBrace === -1 || lastBrace === -1) {
+          throw new Error("No JSON object found in response");
+        }
+
+        const cleanJson = rawText.substring(firstBrace, lastBrace + 1);
+
         parsedData = JSON.parse(cleanJson) as SMARTGoalResponse;
 
         // Run Risk Calculation
         riskAnalysis = calculateRisk(parsedData.smart_data);
 
         // Construct the message for the user
-        botResponseText = `${parsedData.user_communication.message}\n\n${parsedData.user_communication.question}`;
+        //botResponseText = `${parsedData.user_communication.message}\n\n${parsedData.user_communication.question}`;
+
+        if (parsedData.goal_summary && parsedData.goal_summary !== "String") {
+          botResponseText += `\n\n**🎯 Goal Summary:**\n${parsedData.goal_summary}`;
+        }
+
+        botResponseText += `\n\n${parsedData.user_communication.question}`;
 
         // If risk is high, append a safety note
         if (riskAnalysis.level === "HIGH" || parsedData.risk_flag) {
