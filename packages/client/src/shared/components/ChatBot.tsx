@@ -15,14 +15,63 @@ popAudio.volume = 0.2;
 const notificationAudio = new Audio(notificationSound);
 notificationAudio.volume = 0.2;
 
+type SmartAssessment = {
+  is_specific: boolean;
+  is_measurable: boolean;
+  is_achievable: boolean;
+  is_relevant: boolean;
+  is_time_bound: boolean;
+};
+
+type GoalData = {
+  summary: string;
+  smartData: {
+    goal_category: string;
+    target_activity: string;
+    current_ability: string;
+    measurement: {
+      metric: string;
+      current_value: number | null;
+      target_value: number | null;
+      unit: string;
+    };
+    frequency: string;
+    timeline_weeks: number;
+    assistance_level: number;
+    smart_assessment: SmartAssessment;
+  };
+  riskAssessment: {
+    score: number;
+    level: "LOW" | "MODERATE" | "HIGH";
+    requires_approval: boolean;
+  };
+};
+
 type ChatResponse = {
   generatedText: string;
+  conversationState: "gathering_info" | "drafting_goal" | "refining_goal" | "goal_complete";
+  goalData: GoalData | null;
 };
 
 type Conversation = {
   id: string;
   title: string;
   updated_at: string;
+  status: "active" | "completed";
+};
+
+const SMART_LABELS: Record<keyof SmartAssessment, string> = {
+  is_specific: "Specific",
+  is_measurable: "Measurable",
+  is_achievable: "Achievable",
+  is_relevant: "Relevant",
+  is_time_bound: "Time-bound",
+};
+
+const RISK_COLOURS: Record<string, string> = {
+  LOW: "text-green-600",
+  MODERATE: "text-amber-600",
+  HIGH: "text-red-600",
 };
 
 const ChatBot = () => {
@@ -34,6 +83,8 @@ const ChatBot = () => {
   const [activeConversationId, setActiveConversationId] = useState<string>(
     crypto.randomUUID()
   );
+  const [isConversationComplete, setIsConversationComplete] = useState(false);
+  const [completedGoalData, setCompletedGoalData] = useState<GoalData | null>(null);
 
   useEffect(() => {
     fetchConversations();
@@ -53,6 +104,8 @@ const ChatBot = () => {
     setActiveConversationId(newId);
     setMessages([]);
     setError("");
+    setIsConversationComplete(false);
+    setCompletedGoalData(null);
     if (window.innerWidth < 768) setIsSidebarOpen(false);
   };
 
@@ -60,8 +113,11 @@ const ChatBot = () => {
     try {
       setActiveConversationId(id);
       setError("");
+      setCompletedGoalData(null);
       const { data } = await api.get<Message[]>(`/conversations/${id}`);
       setMessages(data);
+      const conv = conversations.find((c) => c.id === id);
+      setIsConversationComplete(conv?.status === "completed");
       if (window.innerWidth < 768) setIsSidebarOpen(false);
     } catch (err) {
       console.error("Failed to load chat", err);
@@ -100,6 +156,11 @@ const ChatBot = () => {
       setMessages((prev) => [...prev, botMsg]);
       notificationAudio.play();
 
+      if (data.conversationState === "goal_complete") {
+        setIsConversationComplete(true);
+        setCompletedGoalData(data.goalData);
+      }
+
       fetchConversations();
     } catch (error) {
       console.error(error);
@@ -129,7 +190,7 @@ const ChatBot = () => {
             <Menu className="w-5 h-5" />
           </button>
           <span className="ml-4 font-medium text-gray-700">
-            Linh Rehabilitation Assistant
+            Leo Rehabilitation Assistant
           </span>
         </div>
 
@@ -147,10 +208,96 @@ const ChatBot = () => {
 
             {isBotTyping && <TypingIndicator />}
             {error && <p className="text-red-500 text-center">{error}</p>}
+
+            {isConversationComplete && completedGoalData && (
+              <div className="border-2 border-green-300 bg-green-50 rounded-xl p-4 mt-2">
+                <h3 className="font-semibold text-green-800 text-base mb-1">
+                  Goal saved
+                </h3>
+                <p className="text-gray-700 text-sm mb-3">
+                  {completedGoalData.summary}
+                </p>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-600 mb-3">
+                  <div>
+                    <span className="font-medium">Category:</span>{" "}
+                    {completedGoalData.smartData.goal_category.replace("_", " ")}
+                  </div>
+                  <div>
+                    <span className="font-medium">Timeline:</span>{" "}
+                    {completedGoalData.smartData.timeline_weeks} weeks
+                  </div>
+                  <div>
+                    <span className="font-medium">Activity:</span>{" "}
+                    {completedGoalData.smartData.target_activity}
+                  </div>
+                  <div>
+                    <span className="font-medium">Frequency:</span>{" "}
+                    {completedGoalData.smartData.frequency}
+                  </div>
+                  {completedGoalData.smartData.measurement.target_value !== null && (
+                    <div className="col-span-2">
+                      <span className="font-medium">Target:</span>{" "}
+                      {completedGoalData.smartData.measurement.target_value}{" "}
+                      {completedGoalData.smartData.measurement.unit}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-1 flex-wrap mb-3">
+                  {(
+                    Object.entries(
+                      completedGoalData.smartData.smart_assessment,
+                    ) as [keyof SmartAssessment, boolean][]
+                  ).map(([key, value]) => (
+                    <span
+                      key={key}
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        value
+                          ? "bg-green-200 text-green-800"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {SMART_LABELS[key]} {value ? "✓" : "✗"}
+                    </span>
+                  ))}
+                </div>
+
+                <p
+                  className={`text-xs font-medium mb-3 ${RISK_COLOURS[completedGoalData.riskAssessment.level]}`}
+                >
+                  Risk level: {completedGoalData.riskAssessment.level} (score:{" "}
+                  {completedGoalData.riskAssessment.score})
+                  {completedGoalData.riskAssessment.requires_approval &&
+                    " — therapist review recommended"}
+                </p>
+
+                <button
+                  onClick={handleNewChat}
+                  className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  Start New Conversation
+                </button>
+              </div>
+            )}
+
+            {isConversationComplete && !completedGoalData && (
+              <div className="border border-green-200 bg-green-50 rounded-xl p-4 mt-2 text-center">
+                <p className="text-green-700 font-medium text-sm mb-3">
+                  This conversation has been completed.
+                </p>
+                <button
+                  onClick={handleNewChat}
+                  className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  Start New Conversation
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="w-full">
-            <ChatInput onSubmit={onSubmit} />
+            <ChatInput onSubmit={onSubmit} disabled={isConversationComplete} />
           </div>
         </div>
       </div>

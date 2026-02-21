@@ -18,9 +18,8 @@ import bcrypt from "bcryptjs";
 import type { User } from "../utilities/types";
 import type { RowDataPacket } from "mysql2/promise";
 import { GoogleGenAI } from "@google/genai";
-import type { Content } from "@google/genai";
 import {
-  REHAB_LINH_SYSTEM_PROMPT,
+  REHAB_LEO_SYSTEM_PROMPT,
   type SMARTGoalResponse,
 } from "../utilities/prompt.config";
 import { calculateRisk } from "../utilities/riskCalculator";
@@ -39,7 +38,7 @@ userRoutes.post(
     try {
       const [rows] = await connection.execute(
         "SELECT email FROM user WHERE email=?",
-        [email]
+        [email],
       );
       if ((rows as any).length > 0) {
         return res.status(400).json({ message: "Email already exists." });
@@ -57,27 +56,27 @@ userRoutes.post(
     const userId: string = crypto.randomUUID();
     await connection.execute(
       "INSERT INTO user(id, email, password) VALUES(?, ?, ?)",
-      [userId, email, hashedPassword]
+      [userId, email, hashedPassword],
     );
 
     // Sign the access token
     const accessToken = jwt.sign(
       { id: userId, email: email },
       process.env.JWT_ACCESS_SECRET as string,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     // Create and store the refresh token
     const refreshToken = jwt.sign(
       { id: userId, email: email },
       process.env.JWT_REFRESH_SECRET as string,
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await connection.execute(
       "INSERT INTO refresh_token (user_id, token, expires_at) VALUES (?, ?, ?)",
-      [userId, refreshToken, expiresAt]
+      [userId, refreshToken, expiresAt],
     );
 
     res.cookie("refreshToken", refreshToken, {
@@ -88,7 +87,7 @@ userRoutes.post(
 
     //return tokens
     res.status(201).json({ accessToken });
-  }
+  },
 );
 
 userRoutes.post(
@@ -100,7 +99,7 @@ userRoutes.post(
     //Check the email exists
     const [rows] = await connection.execute(
       "SELECT id, email, password FROM user WHERE email = ?",
-      [email]
+      [email],
     );
 
     if ((rows as any).length === 0) {
@@ -118,20 +117,20 @@ userRoutes.post(
     const accessToken = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_ACCESS_SECRET as string,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     // Create and store the refresh token
     const refreshToken = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_REFRESH_SECRET as string,
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await connection.execute(
       "INSERT INTO refresh_token (user_id, token, expires_at) VALUES (?, ?, ?)",
-      [user.id, refreshToken, expiresAt]
+      [user.id, refreshToken, expiresAt],
     );
 
     res.cookie("refreshToken", refreshToken, {
@@ -141,7 +140,7 @@ userRoutes.post(
     });
 
     res.status(200).json({ accessToken });
-  }
+  },
 );
 
 userRoutes.post("/refresh-token", async (req: Request, res: Response) => {
@@ -154,12 +153,12 @@ userRoutes.post("/refresh-token", async (req: Request, res: Response) => {
   try {
     const userInfo = jwt.verify(
       refreshToken,
-      process.env.JWT_REFRESH_SECRET as string
+      process.env.JWT_REFRESH_SECRET as string,
     ) as { id: string; email: string };
 
     const [deleteResult] = await connection.execute(
       "DELETE FROM refresh_token WHERE token = ?",
-      [refreshToken]
+      [refreshToken],
     );
 
     if ((deleteResult as any).affectedRows === 0) {
@@ -171,19 +170,19 @@ userRoutes.post("/refresh-token", async (req: Request, res: Response) => {
     const newRefreshToken = jwt.sign(
       { id: userInfo.id, email: userInfo.email },
       process.env.JWT_REFRESH_SECRET as string,
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
     const newAccessToken = jwt.sign(
       { id: userInfo.id, email: userInfo.email },
       process.env.JWT_ACCESS_SECRET as string,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await connection.execute(
       "INSERT INTO refresh_token (user_id, token, expires_at) VALUES (?, ?, ?)",
-      [userInfo.id, newRefreshToken, expiresAt]
+      [userInfo.id, newRefreshToken, expiresAt],
     );
 
     res.cookie("refreshToken", newRefreshToken, {
@@ -215,14 +214,14 @@ userRoutes.post(
     try {
       await connection.execute(
         "UPDATE user SET name = ?, dob = ?, gender = ?, meditation_level = ? WHERE id = ?",
-        [displayName, dateOfBirth, gender, meditationExperience, user.id]
+        [displayName, dateOfBirth, gender, meditationExperience, user.id],
       );
     } catch (err) {
       res.status(500).json({ message: "Server error to update user info." });
     }
 
     res.status(200).json({ message: "Updated successfully." });
-  }
+  },
 );
 
 userRoutes.get(
@@ -238,7 +237,7 @@ userRoutes.get(
     try {
       const [rows] = await connection.execute(
         "Select id, email, name, dob, gender, meditation_level From user where id = ?",
-        [user.id]
+        [user.id],
       );
 
       if ((rows as any).length === 0) {
@@ -251,7 +250,7 @@ userRoutes.get(
       console.error("Failed to fetch user data:", err);
       res.status(500).json({ message: "Server error to fetch user info." });
     }
-  }
+  },
 );
 
 userRoutes.post("/logout", async (req: Request, res: Response) => {
@@ -266,7 +265,7 @@ userRoutes.post("/logout", async (req: Request, res: Response) => {
         const expiresAt = new Date(decoded.exp * 1000);
         await connection.execute(
           "INSERT INTO blacklisted_token (token, expires_at) VALUES (?, ?)",
-          [token, expiresAt]
+          [token, expiresAt],
         );
       }
     } catch (error) {
@@ -329,7 +328,7 @@ userRoutes.get(
 
       const [rows] = await connection.execute<RowDataPacket[]>(
         sqlQuery,
-        sqlValues
+        sqlValues,
       );
 
       const checkedInDates = new Set(rows.map((row) => row.checkin_date));
@@ -341,7 +340,7 @@ userRoutes.get(
       console.error(err);
       res.status(500).json({ message: "Server error fetching check-ins." });
     }
-  }
+  },
 );
 
 userRoutes.post(
@@ -358,14 +357,14 @@ userRoutes.post(
     try {
       await connection.execute(
         "INSERT INTO daily_checkin (id, user_id, checkin_date, status) VALUES (?, ?, ?, ?)",
-        [checkinId, user.id, todayDate, status]
+        [checkinId, user.id, todayDate, status],
       );
       res.status(201).json({ message: "Check-in successful." });
     } catch (err: any) {
       console.error(err);
       res.status(500).json({ message: "Server error during check-in." });
     }
-  }
+  },
 );
 
 userRoutes.post(
@@ -399,14 +398,14 @@ userRoutes.post(
           confidence || null,
           confidenceReason || null,
           reminderType || "none",
-        ]
+        ],
       );
       res.status(201).json({ message: "Goal saved successfully." });
     } catch (err: any) {
       console.error("Failed to save goal:", err);
       return res.status(500).json({ message: "Server error saving goal." });
     }
-  }
+  },
 );
 
 userRoutes.post(
@@ -480,7 +479,7 @@ userRoutes.post(
       console.error("Failed to save wellness summary:", err);
       return res.status(500).json({ message: "Server error saving summary." });
     }
-  }
+  },
 );
 
 const generateTitle = (prompt: string) => {
@@ -495,14 +494,14 @@ userRoutes.get(
       const user = (req as any).user;
       const [rows] = await connection.execute(
         "SELECT * FROM conversations WHERE user_id = ? ORDER BY updated_at DESC",
-        [user.id]
+        [user.id],
       );
       res.json(rows);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Failed to fetch history" });
     }
-  }
+  },
 );
 
 userRoutes.get(
@@ -515,7 +514,7 @@ userRoutes.get(
 
       const [conversations] = await connection.execute<RowDataPacket[]>(
         "SELECT id FROM conversations WHERE id = ? AND user_id = ?",
-        [conversationId, user.id]
+        [conversationId, user.id],
       );
 
       if (conversations.length === 0) {
@@ -524,7 +523,7 @@ userRoutes.get(
 
       const [messages] = await connection.query(
         "SELECT content, role FROM messages WHERE conversation_id = ? ORDER BY created_at ASC",
-        [conversationId]
+        [conversationId],
       );
 
       res.json(messages);
@@ -532,7 +531,7 @@ userRoutes.get(
       console.error(error);
       res.status(500).json({ message: "Failed to fetch messages" });
     }
-  }
+  },
 );
 
 userRoutes.post(
@@ -554,30 +553,30 @@ userRoutes.post(
 
       const [existingConv] = await chatConnection.query<RowDataPacket[]>(
         "SELECT id FROM conversations WHERE id = ?",
-        [conversationId]
+        [conversationId],
       );
 
       if (existingConv.length === 0) {
         await chatConnection.query(
           "INSERT INTO conversations (id, user_id, title) VALUES (?, ?, ?)",
-          [conversationId, user.id, generateTitle(prompt)]
+          [conversationId, user.id, generateTitle(prompt)],
         );
       } else {
         await chatConnection.query(
           "UPDATE conversations SET updated_at = NOW() WHERE id = ?",
-          [conversationId]
+          [conversationId],
         );
       }
 
       await chatConnection.query(
         "INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)",
-        [conversationId, "user", prompt]
+        [conversationId, "user", prompt],
       );
 
       const historyLimit = 15;
       const [historyRows] = await chatConnection.query<RowDataPacket[]>(
         "SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY created_at DESC LIMIT ?",
-        [conversationId, historyLimit]
+        [conversationId, historyLimit],
       );
 
       const historyForGemini = historyRows.reverse().map((msg: any) => ({
@@ -588,16 +587,10 @@ userRoutes.post(
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: historyForGemini,
-        // contents: [
-        //   {
-        //     role: "user",
-        //     parts: [{ text: prompt }],
-        //   },
-        // ],
         config: {
           maxOutputTokens: 5000,
           temperature: 0.2,
-          systemInstruction: REHAB_LINH_SYSTEM_PROMPT,
+          systemInstruction: REHAB_LEO_SYSTEM_PROMPT,
           responseMimeType: "application/json",
         },
       });
@@ -613,10 +606,6 @@ userRoutes.post(
       let parsedData: SMARTGoalResponse | null = null;
 
       try {
-        // Clean markdown if Gemini adds it
-        //const cleanJson = rawText.replace(/```json|```/g, "").trim();
-        //parsedData = JSON.parse(cleanJson) as SMARTGoalResponse;
-
         const firstBrace = rawText.indexOf("{");
         const lastBrace = rawText.lastIndexOf("}");
 
@@ -631,19 +620,60 @@ userRoutes.post(
         // Run Risk Calculation
         riskAnalysis = calculateRisk(parsedData.smart_data);
 
-        // Construct the message for the user
-        //botResponseText = `${parsedData.user_communication.message}\n\n${parsedData.user_communication.question}`;
+        // Start with the warm conversational message
+        botResponseText = parsedData.user_communication.message;
 
-        if (parsedData.goal_summary && parsedData.goal_summary !== "String") {
-          botResponseText += `\n\n**🎯 Goal Summary:**\n${parsedData.goal_summary}`;
+        const showSummary =
+          ["drafting_goal", "refining_goal", "goal_complete"].includes(
+            parsedData.conversation_state,
+          ) && parsedData.goal_summary;
+
+        if (showSummary) {
+          botResponseText += `\n\n**Goal Summary:** ${parsedData.goal_summary}`;
         }
 
-        botResponseText += `\n\n${parsedData.user_communication.question}`;
+        if (parsedData.user_communication.question) {
+          botResponseText += `\n\n${parsedData.user_communication.question}`;
+        }
 
         // If risk is high, append a safety note
         if (riskAnalysis.level === "HIGH" || parsedData.risk_flag) {
           botResponseText +=
-            "\n\n*(Note: This goal seems quite challenging based on current data. We will proceed carefully.)*";
+            "\n\n*(Note: This goal seems quite challenging. We will proceed carefully and involve your therapist.)*";
+        }
+
+        // On goal_complete: persist goal to chat_goals and mark conversation as completed
+        if (parsedData.conversation_state === "goal_complete" && riskAnalysis) {
+          const goalId = crypto.randomUUID();
+          const sa = parsedData.smart_data.smart_assessment;
+          const m = parsedData.smart_data.measurement;
+          await chatConnection.query(
+            `INSERT INTO chat_goals (
+              id, conversation_id, user_id, goal_summary, goal_category,
+              target_activity, current_ability,
+              measurement_metric, measurement_current_val, measurement_target_val, measurement_unit,
+              frequency, timeline_weeks, assistance_level,
+              is_specific, is_measurable, is_achievable, is_relevant, is_time_bound,
+              risk_score, risk_level, requires_approval
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              goalId, conversationId, user.id, parsedData.goal_summary,
+              parsedData.smart_data.goal_category,
+              parsedData.smart_data.target_activity,
+              parsedData.smart_data.current_ability,
+              m.metric, m.current_value, m.target_value, m.unit,
+              parsedData.smart_data.frequency,
+              parsedData.smart_data.timeline_weeks,
+              parsedData.smart_data.assistance_level,
+              sa.is_specific, sa.is_measurable, sa.is_achievable,
+              sa.is_relevant, sa.is_time_bound,
+              riskAnalysis.score, riskAnalysis.level, riskAnalysis.requires_approval,
+            ],
+          );
+          await chatConnection.query(
+            "UPDATE conversations SET status = 'completed' WHERE id = ?",
+            [conversationId],
+          );
         }
       } catch (parseError) {
         console.error("JSON Parse Error:", parseError);
@@ -652,12 +682,23 @@ userRoutes.post(
 
       await chatConnection.query(
         "INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)",
-        [conversationId, "bot", botResponseText]
+        [conversationId, "bot", botResponseText],
       );
 
       await chatConnection.commit();
 
-      res.status(200).json({ generatedText: botResponseText });
+      res.status(200).json({
+        generatedText: botResponseText,
+        conversationState: parsedData?.conversation_state ?? "gathering_info",
+        goalData:
+          parsedData?.conversation_state === "goal_complete"
+            ? {
+                summary: parsedData.goal_summary,
+                smartData: parsedData.smart_data,
+                riskAssessment: riskAnalysis,
+              }
+            : null,
+      });
     } catch (err) {
       await chatConnection.rollback();
       console.error("Gemini API Error:", err);
@@ -665,7 +706,7 @@ userRoutes.post(
     } finally {
       chatConnection.release();
     }
-  }
+  },
 );
 
 userRoutes.delete(
@@ -678,7 +719,7 @@ userRoutes.delete(
 
       const [result] = await connection.query<any>(
         "DELETE FROM conversations WHERE id = ? AND user_id = ?",
-        [conversationId, user.id]
+        [conversationId, user.id],
       );
 
       if (result.affectedRows === 0) {
@@ -692,7 +733,7 @@ userRoutes.delete(
       console.error(error);
       res.status(500).json({ message: "Failed to delete conversation" });
     }
-  }
+  },
 );
 
 export default userRoutes;

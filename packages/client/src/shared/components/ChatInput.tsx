@@ -9,9 +9,10 @@ export type ChatFormData = {
 
 type Props = {
   onSubmit: (data: ChatFormData) => void;
+  disabled?: boolean;
 };
 
-const ChatInput = ({ onSubmit }: Props) => {
+const ChatInput = ({ onSubmit, disabled = false }: Props) => {
   const { register, handleSubmit, reset, formState } = useForm<ChatFormData>();
 
   const submit = handleSubmit((data) => {
@@ -30,7 +31,7 @@ const ChatInput = ({ onSubmit }: Props) => {
     <form
       onSubmit={submit}
       onKeyDown={handleKeyDown}
-      className="flex flex-col gap-2 items-end border-2 p-4 rounded-3xl"
+      className={`flex flex-col gap-2 items-end border-2 p-4 rounded-3xl ${disabled ? "opacity-50 pointer-events-none" : ""}`}
     >
       <textarea
         {...register("prompt", {
@@ -38,11 +39,12 @@ const ChatInput = ({ onSubmit }: Props) => {
           validate: (data) => data.trim().length > 0,
         })}
         autoFocus
+        disabled={disabled}
         className="w-full border-0 focus:outline-0 resize-none"
-        placeholder="Ask anything"
+        placeholder={disabled ? "Conversation complete — start a new chat to continue" : "Ask anything"}
         maxLength={1000}
       />
-      <Button disabled={!formState.isValid} className="rounded-full w-9 h-9">
+      <Button disabled={!formState.isValid || disabled} className="rounded-full w-9 h-9">
         <FaArrowUp />
       </Button>
     </form>
