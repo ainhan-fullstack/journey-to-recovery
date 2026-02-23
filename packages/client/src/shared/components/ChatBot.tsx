@@ -74,6 +74,27 @@ const RISK_COLOURS: Record<string, string> = {
   HIGH: "text-red-600",
 };
 
+/** "upper_limb" → "Upper Limb",  "adl" → "ADL" */
+function formatCategory(s: string): string {
+  return s
+    .split("_")
+    .map((w) => (w === "adl" ? "ADL" : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(" ");
+}
+
+/** Capitalise the first letter of a sentence from the AI. */
+function capitalise(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
+/** "scale_1_to_5" → "Scale 1 to 5",  "meters" → "Meters" */
+function formatUnit(s: string): string {
+  return s
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isBotTyping, setIsBotTyping] = useState(false);
@@ -221,25 +242,34 @@ const ChatBot = () => {
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-600 mb-3">
                   <div>
                     <span className="font-medium">Category:</span>{" "}
-                    {completedGoalData.smartData.goal_category.replace("_", " ")}
+                    {formatCategory(completedGoalData.smartData.goal_category)}
                   </div>
                   <div>
                     <span className="font-medium">Timeline:</span>{" "}
                     {completedGoalData.smartData.timeline_weeks} weeks
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <span className="font-medium">Activity:</span>{" "}
-                    {completedGoalData.smartData.target_activity}
+                    {capitalise(completedGoalData.smartData.target_activity)}
                   </div>
                   <div>
                     <span className="font-medium">Frequency:</span>{" "}
-                    {completedGoalData.smartData.frequency}
+                    {completedGoalData.smartData.frequency
+                      ? capitalise(completedGoalData.smartData.frequency)
+                      : "Not specified"}
                   </div>
                   {completedGoalData.smartData.measurement.target_value !== null && (
-                    <div className="col-span-2">
+                    <div>
                       <span className="font-medium">Target:</span>{" "}
+                      {completedGoalData.smartData.measurement.current_value !== null && (
+                        <span className="text-gray-400">
+                          {completedGoalData.smartData.measurement.current_value} →{" "}
+                        </span>
+                      )}
                       {completedGoalData.smartData.measurement.target_value}{" "}
-                      {completedGoalData.smartData.measurement.unit}
+                      <span className="text-gray-400">
+                        ({formatUnit(completedGoalData.smartData.measurement.unit)})
+                      </span>
                     </div>
                   )}
                 </div>

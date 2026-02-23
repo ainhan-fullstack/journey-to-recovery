@@ -605,6 +605,10 @@ userRoutes.post(
       let riskAnalysis = null;
       let parsedData: SMARTGoalResponse | null = null;
 
+      // ── Step 1: parse the AI's JSON response ──────────────────
+      // Only JSON-related errors are caught here. Database errors
+      // must NOT be caught here — they should roll back the whole
+      // transaction via the outer catch block.
       try {
         const firstBrace = rawText.indexOf("{");
         const lastBrace = rawText.lastIndexOf("}");
@@ -613,11 +617,18 @@ userRoutes.post(
           throw new Error("No JSON object found in response");
         }
 
-        const cleanJson = rawText.substring(firstBrace, lastBrace + 1);
+        parsedData = JSON.parse(
+          rawText.substring(firstBrace, lastBrace + 1),
+        ) as SMARTGoalResponse;
+      } catch (parseError) {
+        console.error("JSON Parse Error:", parseError);
+        // Fallback: show the raw text so the user still gets a response
+        botResponseText = rawText;
+      }
 
-        parsedData = JSON.parse(cleanJson) as SMARTGoalResponse;
-
-        // Run Risk Calculation
+      // ── Step 2: build the chat bubble text ────────────────────
+      // Only runs when parsing succeeded (parsedData is not null).
+      if (parsedData) {
         riskAnalysis = calculateRisk(parsedData.smart_data);
 
         // Start with the warm conversational message
@@ -636,48 +647,48 @@ userRoutes.post(
           botResponseText += `\n\n${parsedData.user_communication.question}`;
         }
 
-        // If risk is high, append a safety note
         if (riskAnalysis.level === "HIGH" || parsedData.risk_flag) {
           botResponseText +=
             "\n\n*(Note: This goal seems quite challenging. We will proceed carefully and involve your therapist.)*";
         }
+      }
 
-        // On goal_complete: persist goal to chat_goals and mark conversation as completed
-        if (parsedData.conversation_state === "goal_complete" && riskAnalysis) {
-          const goalId = crypto.randomUUID();
-          const sa = parsedData.smart_data.smart_assessment;
-          const m = parsedData.smart_data.measurement;
-          await chatConnection.query(
-            `INSERT INTO chat_goals (
-              id, conversation_id, user_id, goal_summary, goal_category,
-              target_activity, current_ability,
-              measurement_metric, measurement_current_val, measurement_target_val, measurement_unit,
-              frequency, timeline_weeks, assistance_level,
-              is_specific, is_measurable, is_achievable, is_relevant, is_time_bound,
-              risk_score, risk_level, requires_approval
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              goalId, conversationId, user.id, parsedData.goal_summary,
-              parsedData.smart_data.goal_category,
-              parsedData.smart_data.target_activity,
-              parsedData.smart_data.current_ability,
-              m.metric, m.current_value, m.target_value, m.unit,
-              parsedData.smart_data.frequency,
-              parsedData.smart_data.timeline_weeks,
-              parsedData.smart_data.assistance_level,
-              sa.is_specific, sa.is_measurable, sa.is_achievable,
-              sa.is_relevant, sa.is_time_bound,
-              riskAnalysis.score, riskAnalysis.level, riskAnalysis.requires_approval,
-            ],
-          );
-          await chatConnection.query(
-            "UPDATE conversations SET status = 'completed' WHERE id = ?",
-            [conversationId],
-          );
-        }
-      } catch (parseError) {
-        console.error("JSON Parse Error:", parseError);
-        botResponseText = rawText;
+      // ── Step 3: persist goal on completion ────────────────────
+      // Runs outside the JSON parse try-catch so that a database
+      // error propagates to the outer catch and rolls back the
+      // entire transaction, rather than silently falling back to
+      // showing raw JSON as the bot message.
+      if (parsedData?.conversation_state === "goal_complete" && riskAnalysis) {
+        const goalId = crypto.randomUUID();
+        const sa = parsedData.smart_data.smart_assessment;
+        const m = parsedData.smart_data.measurement;
+        await chatConnection.query(
+          `INSERT INTO chat_goals (
+            id, conversation_id, user_id, goal_summary, goal_category,
+            target_activity, current_ability,
+            measurement_metric, measurement_current_val, measurement_target_val, measurement_unit,
+            frequency, timeline_weeks, assistance_level,
+            is_specific, is_measurable, is_achievable, is_relevant, is_time_bound,
+            risk_score, risk_level, requires_approval
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            goalId, conversationId, user.id, parsedData.goal_summary,
+            parsedData.smart_data.goal_category,
+            parsedData.smart_data.target_activity,
+            parsedData.smart_data.current_ability,
+            m.metric, m.current_value, m.target_value, m.unit,
+            parsedData.smart_data.frequency,
+            parsedData.smart_data.timeline_weeks,
+            parsedData.smart_data.assistance_level,
+            sa.is_specific, sa.is_measurable, sa.is_achievable,
+            sa.is_relevant, sa.is_time_bound,
+            riskAnalysis.score, riskAnalysis.level, riskAnalysis.requires_approval,
+          ],
+        );
+        await chatConnection.query(
+          "UPDATE conversations SET status = 'completed' WHERE id = ?",
+          [conversationId],
+        );
       }
 
       await chatConnection.query(
