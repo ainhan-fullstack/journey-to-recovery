@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const api = axios.create({
-  //baseURL: "https://server-production-1696.up.railway.app/api",
-  baseURL: "http://localhost:3000/api",
+  baseURL: "https://server-production-1696.up.railway.app/api",
+  //baseURL: "http://localhost:3000/api",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -18,7 +18,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 api.interceptors.response.use(
@@ -47,7 +47,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
