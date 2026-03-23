@@ -1,8 +1,11 @@
 /**
- * ChatSimulator — calls Gemini directly (bypasses Express) for fast, deterministic evaluation.
+ * ChatSimulator — calls the LLM directly (bypasses Express) for fast, deterministic evaluation.
  * Uses temperature: 0.0 so responses are reproducible.
  */
-import { GoogleGenAI } from "@google/genai";
+// --- Gemini SDK (commented out) ---
+// import { GoogleGenAI } from "@google/genai";
+// --- OpenAI SDK ---
+import OpenAI from "openai";
 import {
   REHAB_LEO_SYSTEM_PROMPT,
   type SMARTGoalResponse,
@@ -26,29 +29,59 @@ export interface SimulationResult {
 }
 
 export class ChatSimulator {
-  private ai: GoogleGenAI;
-  private history: { role: string; parts: { text: string }[] }[];
+  // --- Gemini fields (commented out) ---
+  // private ai: GoogleGenAI;
+  // private history: { role: string; parts: { text: string }[] }[];
+  // --- OpenAI fields ---
+  private ai: OpenAI;
+  private history: OpenAI.Chat.ChatCompletionMessageParam[];
 
   constructor(apiKey: string) {
-    this.ai = new GoogleGenAI({ apiKey });
+    // --- Gemini constructor (commented out) ---
+    // this.ai = new GoogleGenAI({ apiKey });
+    // this.history = [];
+    // --- OpenAI constructor ---
+    this.ai = new OpenAI({ apiKey });
     this.history = [];
   }
 
-  async sendMessage(userMessage: string, turnNumber: number): Promise<SimulationTurn> {
-    this.history.push({ role: "user", parts: [{ text: userMessage }] });
+  async sendMessage(
+    userMessage: string,
+    turnNumber: number,
+  ): Promise<SimulationTurn> {
+    // --- Gemini sendMessage (commented out) ---
+    // this.history.push({ role: "user", parts: [{ text: userMessage }] });
+    //
+    // const response = await this.ai.models.generateContent({
+    //   model: "gemini-2.5-flash",
+    //   contents: this.history,
+    //   config: {
+    //     temperature: 0.0,
+    //     maxOutputTokens: 3000,
+    //     systemInstruction: REHAB_LEO_SYSTEM_PROMPT,
+    //     responseMimeType: "application/json",
+    //   },
+    // });
+    //
+    // const rawText = response.text ?? "";
 
-    const response = await this.ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: this.history,
-      config: {
-        temperature: 0.0,
-        maxOutputTokens: 3000,
-        systemInstruction: REHAB_LEO_SYSTEM_PROMPT,
-        responseMimeType: "application/json",
-      },
+    // --- OpenAI sendMessage ---
+    this.history.push({ role: "user", content: userMessage });
+
+    const response = await this.ai.chat.completions.create({
+      model: "gpt-5.4-nano",
+      messages: [
+        { role: "system", content: REHAB_LEO_SYSTEM_PROMPT },
+        ...this.history,
+      ],
+      temperature: 0.0,
+      //max_tokens: 3000,
+      max_completion_tokens: 500,
+      response_format: { type: "json_object" },
     });
 
-    const rawText = response.text ?? "";
+    const rawText = response.choices[0]?.message?.content ?? "";
+
     let parsedResponse: SMARTGoalResponse | null = null;
     let parseSuccess = false;
 
@@ -66,9 +99,18 @@ export class ChatSimulator {
     }
 
     // Add the model response to history so subsequent turns have context
-    this.history.push({ role: "model", parts: [{ text: rawText }] });
+    // --- Gemini history format (commented out) ---
+    // this.history.push({ role: "model", parts: [{ text: rawText }] });
+    // --- OpenAI history format ---
+    this.history.push({ role: "assistant", content: rawText });
 
-    return { turnNumber, userMessage, rawResponse: rawText, parsedResponse, parseSuccess };
+    return {
+      turnNumber,
+      userMessage,
+      rawResponse: rawText,
+      parsedResponse,
+      parseSuccess,
+    };
   }
 
   async runScenario(
@@ -97,7 +139,8 @@ export class ChatSimulator {
     }
 
     const lastTurn = turns[turns.length - 1];
-    const finalState = lastTurn?.parsedResponse?.conversation_state ?? "unknown";
+    const finalState =
+      lastTurn?.parsedResponse?.conversation_state ?? "unknown";
 
     return {
       scenarioId,

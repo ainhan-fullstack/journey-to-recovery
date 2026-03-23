@@ -1,9 +1,12 @@
 /**
- * LLM-as-Judge: sends a completed conversation transcript to Gemini
+ * LLM-as-Judge: sends a completed conversation transcript to an LLM
  * and asks it to score on 5 dimensions (1–5 each).
  * Run this separately — it's expensive. Output is used in the thesis report.
  */
-import { GoogleGenAI } from "@google/genai";
+// --- Gemini SDK (commented out) ---
+// import { GoogleGenAI } from "@google/genai";
+// --- OpenAI SDK ---
+import OpenAI from "openai";
 import type { SimulationTurn } from "./ChatSimulator";
 
 export interface JudgeScores {
@@ -52,7 +55,10 @@ export async function judgeConversation(
   scenarioName: string,
   turns: SimulationTurn[],
 ): Promise<JudgeScores | null> {
-  const ai = new GoogleGenAI({ apiKey });
+  // --- Gemini client (commented out) ---
+  // const ai = new GoogleGenAI({ apiKey });
+  // --- OpenAI client ---
+  const ai = new OpenAI({ apiKey });
 
   const transcript = turns
     .map(
@@ -68,18 +74,34 @@ export async function judgeConversation(
   const prompt = `Scenario: ${scenarioName}\n\nTranscript:\n${transcript}`;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      config: {
-        temperature: 0.0,
-        maxOutputTokens: 500,
-        systemInstruction: JUDGE_SYSTEM_PROMPT,
-        responseMimeType: "application/json",
-      },
+    // --- Gemini API call (commented out) ---
+    // const response = await ai.models.generateContent({
+    //   model: "gemini-2.5-flash",
+    //   contents: [{ role: "user", parts: [{ text: prompt }] }],
+    //   config: {
+    //     temperature: 0.0,
+    //     maxOutputTokens: 500,
+    //     systemInstruction: JUDGE_SYSTEM_PROMPT,
+    //     responseMimeType: "application/json",
+    //   },
+    // });
+    //
+    // const rawText = response.text ?? "";
+
+    // --- OpenAI API call ---
+    const response = await ai.chat.completions.create({
+      model: "gpt-5.4-nano",
+      messages: [
+        { role: "system", content: JUDGE_SYSTEM_PROMPT },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.0,
+      // max_tokens: 500,
+      max_completion_tokens: 500,
+      response_format: { type: "json_object" },
     });
 
-    const rawText = response.text ?? "";
+    const rawText = response.choices[0]?.message?.content ?? "";
     const firstBrace = rawText.indexOf("{");
     const lastBrace = rawText.lastIndexOf("}");
     if (firstBrace === -1 || lastBrace === -1) return null;

@@ -4,11 +4,16 @@
  *
  * Usage:
  *   cd packages/server
- *   bun run tests/evaluation/report.ts
- *   bun run tests/evaluation/report.ts --judge   (adds Tier 3 LLM scoring — slower + costs API calls)
+ *   bun run report                                        # basic report
+ *   bun run report -- --judge                             # + Tier 3 LLM judge
+ *   bun run report -- --model-name gpt-5.4-nano           # tag the model name
+ *   bun run report -- --judge --model-name gemini-2.5-flash
+ *
+ * Results are saved to tests/evaluation/results/<model>_<timestamp>.json
  */
 
 import { config } from "dotenv";
+import { mkdirSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import { ChatSimulator } from "./ChatSimulator";
 import { scenarios } from "./scenarios";
@@ -18,8 +23,17 @@ import type { JudgeScores } from "./llmJudge";
 
 config({ path: resolve(import.meta.dir, "../../.env") });
 
-const API_KEY = process.env.GEMINI_API_KEY ?? "";
+// const API_KEY = process.env.GEMINI_API_KEY ?? "";
+const API_KEY = process.env.OPENAI_API_KEY ?? "";
 const RUN_JUDGE = process.argv.includes("--judge");
+
+// Parse --model-name flag
+const modelNameIdx = process.argv.indexOf("--model-name");
+const MODEL_NAME = modelNameIdx !== -1 && process.argv[modelNameIdx + 1]
+  ? process.argv[modelNameIdx + 1]!
+  : "unknown-model";
+
+const RESULTS_DIR = resolve(import.meta.dir, "results");
 
 interface ReportRow {
   id: string;
@@ -40,13 +54,14 @@ function pad(s: string | number, width: number): string {
 
 async function main() {
   if (!API_KEY) {
-    console.error("Error: GEMINI_API_KEY not set in packages/server/.env");
+    console.error("Error: OPENAI_API_KEY not set in packages/server/.env");
     process.exit(1);
   }
 
   console.log(`\n${"=".repeat(70)}`);
   console.log("  RehabLeo Evaluation Report");
   console.log(`  ${new Date().toLocaleString()}`);
+  console.log(`  Model: ${MODEL_NAME}`);
   console.log(`  LLM Judge: ${RUN_JUDGE ? "enabled" : "disabled (use --judge to enable)"}`);
   console.log(`${"=".repeat(70)}\n`);
 
@@ -175,6 +190,24 @@ async function main() {
     }
     console.log();
   }
+
+  // ── Save results to JSON file ───────────────────────────────────────────────
+  mkdirSync(RESULTS_DIR, { recursive: true });
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const filename = `${MODEL_NAME}_${timestamp}.json`;
+  const filepath = resolve(RESULTS_DIR, filename);
+
+  const jsonOutput = {
+    model: MODEL_NAME,
+    timestamp: new Date().toISOString(),
+    judgeEnabled: RUN_JUDGE,
+    behavioralPassRate: { passed: passCount, total: rows.length, percent: Math.round((passCount / rows.length) * 100) },
+    averageJudgeScore: judgeCount > 0 ? parseFloat((totalOverall / judgeCount).toFixed(2)) : null,
+    scenarios: rows,
+  };
+
+  writeFileSync(filepath, JSON.stringify(jsonOutput, null, 2));
+  console.log(`Results saved to ${filepath}\n`);
 }
 
 main().catch((err) => {

@@ -21,12 +21,15 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.15.2",
+    "openai": "^6.32.0",
     "server": "workspace:*",
     "zod": "^4.1.12"
   },
   "scripts": {
     "start": "bun run index.ts",
     "dev": "bun --watch run index.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "report": "bun run tests/evaluation/report.ts",
+    "aggregate": "bun run tests/evaluation/aggregate.ts"
   }
 }

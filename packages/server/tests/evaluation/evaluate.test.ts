@@ -5,8 +5,8 @@
  * Tier 1: Structural checks (JSON valid, schema fields present, state values legal)
  * Tier 2: Behavioral checks (easy goals complete, missing info flagged, SMART booleans accurate)
  *
- * Requires GEMINI_API_KEY in packages/server/.env
- * Tests call Gemini directly — expect ~30-60s run time.
+ * Requires OPENAI_API_KEY in packages/server/.env (was GEMINI_API_KEY for Gemini)
+ * Tests call the LLM directly — expect ~30-60s run time.
  */
 
 import { describe, it, expect } from "bun:test";
@@ -18,7 +18,8 @@ import type { SMARTGoalResponse } from "../../utilities/prompt.config";
 
 config({ path: resolve(import.meta.dir, "../../.env") });
 
-const API_KEY = process.env.GEMINI_API_KEY ?? "";
+// const API_KEY = process.env.GEMINI_API_KEY ?? "";
+const API_KEY = process.env.OPENAI_API_KEY ?? "";
 const VALID_STATES = new Set([
   "gathering_info",
   "drafting_goal",
@@ -112,7 +113,7 @@ describe("Tier 1 — Structural: JSON and schema validity", () => {
   for (const scenario of scenarios) {
     it(`[${scenario.id}] ${scenario.name} — first turn parses and matches schema`, async () => {
       if (!API_KEY) {
-        console.warn("GEMINI_API_KEY not set — skipping");
+        console.warn("OPENAI_API_KEY not set — skipping");
         return;
       }
       const sim = new ChatSimulator(API_KEY);
@@ -141,7 +142,7 @@ describe("Tier 2 — Behavioral: easy scenarios complete within max turns", () =
   for (const scenario of easyScenarios) {
     it(`[${scenario.id}] ${scenario.name} — reaches goal_complete`, async () => {
       if (!API_KEY) {
-        console.warn("GEMINI_API_KEY not set — skipping");
+        console.warn("OPENAI_API_KEY not set — skipping");
         return;
       }
       const sim = new ChatSimulator(API_KEY);
@@ -182,7 +183,7 @@ describe("Tier 2 — Behavioral: missing-info scenarios flag missing fields on f
   for (const scenario of missingInfoScenarios) {
     it(`[${scenario.id}] ${scenario.name} — first response has non-empty missing_info`, async () => {
       if (!API_KEY) {
-        console.warn("GEMINI_API_KEY not set — skipping");
+        console.warn("OPENAI_API_KEY not set — skipping");
         return;
       }
       const sim = new ChatSimulator(API_KEY);
@@ -209,7 +210,7 @@ describe("Tier 2 — Behavioral: safety scenarios set risk_flag", () => {
   for (const scenario of safetyScenarios) {
     it(`[${scenario.id}] ${scenario.name} — sets risk_flag on first turn`, async () => {
       if (!API_KEY) {
-        console.warn("GEMINI_API_KEY not set — skipping");
+        console.warn("OPENAI_API_KEY not set — skipping");
         return;
       }
       const sim = new ChatSimulator(API_KEY);
@@ -227,7 +228,7 @@ describe("Tier 2 — Behavioral: safety scenarios set risk_flag", () => {
 describe("Tier 2 — Behavioral: SMART booleans — no timeline means is_time_bound false", () => {
   it("Vague first message 'I want to get better' sets is_time_bound=false", async () => {
     if (!API_KEY) {
-      console.warn("GEMINI_API_KEY not set — skipping");
+      console.warn("OPENAI_API_KEY not set — skipping");
       return;
     }
     const sim = new ChatSimulator(API_KEY);
@@ -243,7 +244,7 @@ describe("Tier 2 — Behavioral: SMART booleans — no timeline means is_time_bo
 describe("Tier 2 — Behavioral: goal_complete not set without explicit confirmation", () => {
   it("[E1-partial] First message alone does not complete the goal", async () => {
     if (!API_KEY) {
-      console.warn("GEMINI_API_KEY not set — skipping");
+      console.warn("OPENAI_API_KEY not set — skipping");
       return;
     }
     const sim = new ChatSimulator(API_KEY);
