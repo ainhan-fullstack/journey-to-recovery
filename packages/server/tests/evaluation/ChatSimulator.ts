@@ -2,14 +2,13 @@
  * ChatSimulator — calls the LLM directly (bypasses Express) for fast, deterministic evaluation.
  * Uses temperature: 0.0 so responses are reproducible.
  */
-// --- Gemini SDK (commented out) ---
-// import { GoogleGenAI } from "@google/genai";
-// --- OpenAI SDK ---
+import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 import {
   CAMAY_SYSTEM_PROMPT,
   type SMARTGoalResponse,
 } from "../../utilities/prompt.config";
+import "dotenv/config";
 
 export interface SimulationTurn {
   turnNumber: number;
@@ -33,15 +32,15 @@ export class ChatSimulator {
   // private ai: GoogleGenAI;
   // private history: { role: string; parts: { text: string }[] }[];
   // --- OpenAI fields ---
-  private ai: OpenAI;
-  private history: OpenAI.Chat.ChatCompletionMessageParam[];
+  private ai: GoogleGenAI | OpenAI;
+  private history: any;
 
   constructor(apiKey: string) {
-    // --- Gemini constructor (commented out) ---
-    // this.ai = new GoogleGenAI({ apiKey });
-    // this.history = [];
-    // --- OpenAI constructor ---
-    this.ai = new OpenAI({ apiKey });
+    if (process.env.EVAL_MODEL === "gemini") {
+      this.ai = new GoogleGenAI({ apiKey });
+    } else {
+      this.ai = new OpenAI({ apiKey });
+    }
     this.history = [];
   }
 
@@ -49,38 +48,40 @@ export class ChatSimulator {
     userMessage: string,
     turnNumber: number,
   ): Promise<SimulationTurn> {
-    // --- Gemini sendMessage (commented out) ---
-    // this.history.push({ role: "user", parts: [{ text: userMessage }] });
-    //
-    // const response = await this.ai.models.generateContent({
-    //   model: "gemini-2.5-flash",
-    //   contents: this.history,
-    //   config: {
-    //     temperature: 0.0,
-    //     maxOutputTokens: 3000,
-    //     systemInstruction: REHAB_LEO_SYSTEM_PROMPT,
-    //     responseMimeType: "application/json",
-    //   },
-    // });
-    //
-    // const rawText = response.text ?? "";
+    let rawText = "";
 
-    // --- OpenAI sendMessage ---
-    this.history.push({ role: "user", content: userMessage });
+    if (process.env.EVAL_MODEL === "gemini" && this.ai instanceof GoogleGenAI) {
+      this.history.push({ role: "user", parts: [{ text: userMessage }] });
+      const response = await this.ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: this.history,
+        config: {
+          temperature: 0.0,
+          maxOutputTokens: 3000,
+          systemInstruction: CAMAY_SYSTEM_PROMPT,
+          responseMimeType: "application/json",
+        },
+      });
 
-    const response = await this.ai.chat.completions.create({
-      model: "gpt-5.4-nano",
-      messages: [
-        { role: "system", content: CAMAY_SYSTEM_PROMPT },
-        ...this.history,
-      ],
-      temperature: 0.0,
-      //max_tokens: 3000,
-      max_completion_tokens: 500,
-      response_format: { type: "json_object" },
-    });
+      rawText = response.text ?? "";
+      this.history.push({ role: "model", parts: [{ text: rawText }] });
+    } else if (this.ai instanceof OpenAI) {
+      this.history.push({ role: "user", content: userMessage });
+      const response = await this.ai.chat.completions.create({
+        model: "gpt-5.4-nano",
+        messages: [
+          { role: "system", content: CAMAY_SYSTEM_PROMPT },
+          ...this.history,
+        ],
+        temperature: 0.0,
+        //max_tokens: 3000,
+        max_completion_tokens: 500,
+        response_format: { type: "json_object" },
+      });
 
-    const rawText = response.choices[0]?.message?.content ?? "";
+      rawText = response.choices[0]?.message?.content ?? "";
+      this.history.push({ role: "assistant", content: rawText });
+    }
 
     let parsedResponse: SMARTGoalResponse | null = null;
     let parseSuccess = false;
@@ -97,12 +98,6 @@ export class ChatSimulator {
     } catch {
       // parse failed — rawText captured for inspection
     }
-
-    // Add the model response to history so subsequent turns have context
-    // --- Gemini history format (commented out) ---
-    // this.history.push({ role: "model", parts: [{ text: rawText }] });
-    // --- OpenAI history format ---
-    this.history.push({ role: "assistant", content: rawText });
 
     return {
       turnNumber,
