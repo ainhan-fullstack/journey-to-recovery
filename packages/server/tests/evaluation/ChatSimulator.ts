@@ -28,10 +28,6 @@ export interface SimulationResult {
 }
 
 export class ChatSimulator {
-  // --- Gemini fields (commented out) ---
-  // private ai: GoogleGenAI;
-  // private history: { role: string; parts: { text: string }[] }[];
-  // --- OpenAI fields ---
   private ai: GoogleGenAI | OpenAI;
   private history: any;
 

@@ -18,13 +18,19 @@ import bcrypt from "bcryptjs";
 import type { User } from "../utilities/types";
 import type { RowDataPacket } from "mysql2/promise";
 import { GoogleGenAI } from "@google/genai";
+import { OpenAI } from "openai";
 import {
   CAMAY_SYSTEM_PROMPT,
   type SMARTGoalResponse,
 } from "../utilities/prompt.config";
 import { calculateRisk } from "../utilities/riskCalculator";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let ai: any;
+if (process.env.EVAL_MODEL === "gemini") {
+  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+} else {
+  ai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 const userRoutes = express.Router();
 
@@ -579,23 +585,51 @@ userRoutes.post(
         [conversationId, historyLimit],
       );
 
-      const historyForGemini = historyRows.reverse().map((msg: any) => ({
-        role: msg.role === "bot" ? "model" : "user",
-        parts: [{ text: msg.content }],
-      }));
+      // const historyForGemini = historyRows.reverse().map((msg: any) => ({
+      //   role: msg.role === "bot" ? "model" : "user",
+      //   parts: [{ text: msg.content }],
+      // }));
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: historyForGemini,
-        config: {
-          maxOutputTokens: 5000,
+      let response: any;
+
+      if (process.env.EVAL_MODEL === "gemini") {
+        const historyForGemini = historyRows.reverse().map((msg: any) => ({
+          role: msg.role === "bot" ? "model" : "user",
+          parts: [{ text: msg.content }],
+        }));
+
+        response = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: historyForGemini,
+          config: {
+            maxOutputTokens: 5000,
+            temperature: 0.2,
+            systemInstruction: CAMAY_SYSTEM_PROMPT,
+            responseMimeType: "application/json",
+          },
+        });
+      } else {
+        const historyForOpenAI = historyRows.reverse().map((msg: any) => ({
+          role: (msg.role === "bot" ? "assistant" : "user") as "assistant" | "user",
+          content: msg.content as string,
+        }));
+
+        response = await (ai as OpenAI).chat.completions.create({
+          model: "gpt-5.4-nano",
+          messages: [
+            { role: "system", content: CAMAY_SYSTEM_PROMPT },
+            ...historyForOpenAI,
+          ],
+          max_completion_tokens: 5000,
           temperature: 0.2,
-          systemInstruction: CAMAY_SYSTEM_PROMPT,
-          responseMimeType: "application/json",
-        },
-      });
+          response_format: { type: "json_object" },
+        });
+      }
 
-      const rawText = response.text;
+      const rawText =
+        process.env.EVAL_MODEL === "gemini"
+          ? response.text
+          : response.choices?.[0]?.message?.content ?? "";
 
       if (!rawText) {
         throw new Error("No response text from AI model");
