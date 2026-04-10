@@ -2,13 +2,20 @@ import express from "express";
 import userRoutes from "./routes/userRoutes";
 import cors from "cors";
 
-const corsOptions = {
-  origin: ["https://willowy-tartufo-ba9677.netlify.app"],
-  //origin: ["http://localhost:5173"],
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true,
-  optionsSuccessStatus: 204,
-};
+const corsOptions =
+  process.env.NODE_ENV === "production"
+    ? {
+        origin: ["https://willowy-tartufo-ba9677.netlify.app"],
+        methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+        credentials: true,
+        optionsSuccessStatus: 204,
+      }
+    : {
+        origin: ["http://localhost:5173"],
+        methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+        credentials: true,
+        optionsSuccessStatus: 204,
+      };
 
 const app = express();
 

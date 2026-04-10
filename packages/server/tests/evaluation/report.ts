@@ -59,7 +59,7 @@ async function main() {
   }
 
   console.log(`\n${"=".repeat(70)}`);
-  console.log("  RehabLeo Evaluation Report");
+  console.log("  Camay Evaluation Report");
   console.log(`  ${new Date().toLocaleString()}`);
   console.log(`  Model: ${MODEL_NAME}`);
   console.log(`  LLM Judge: ${RUN_JUDGE ? "enabled" : "disabled (use --judge to enable)"}`);

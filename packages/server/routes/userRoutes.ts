@@ -19,7 +19,7 @@ import type { User } from "../utilities/types";
 import type { RowDataPacket } from "mysql2/promise";
 import { GoogleGenAI } from "@google/genai";
 import {
-  REHAB_LEO_SYSTEM_PROMPT,
+  CAMAY_SYSTEM_PROMPT,
   type SMARTGoalResponse,
 } from "../utilities/prompt.config";
 import { calculateRisk } from "../utilities/riskCalculator";
@@ -590,7 +590,7 @@ userRoutes.post(
         config: {
           maxOutputTokens: 5000,
           temperature: 0.2,
-          systemInstruction: REHAB_LEO_SYSTEM_PROMPT,
+          systemInstruction: CAMAY_SYSTEM_PROMPT,
           responseMimeType: "application/json",
         },
       });
@@ -672,17 +672,28 @@ userRoutes.post(
             risk_score, risk_level, requires_approval
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
-            goalId, conversationId, user.id, parsedData.goal_summary,
+            goalId,
+            conversationId,
+            user.id,
+            parsedData.goal_summary,
             parsedData.smart_data.goal_category,
             parsedData.smart_data.target_activity,
             parsedData.smart_data.current_ability,
-            m.metric, m.current_value, m.target_value, m.unit,
+            m.metric,
+            m.current_value,
+            m.target_value,
+            m.unit,
             parsedData.smart_data.frequency,
             parsedData.smart_data.timeline_weeks,
             parsedData.smart_data.assistance_level,
-            sa.is_specific, sa.is_measurable, sa.is_achievable,
-            sa.is_relevant, sa.is_time_bound,
-            riskAnalysis.score, riskAnalysis.level, riskAnalysis.requires_approval,
+            sa.is_specific,
+            sa.is_measurable,
+            sa.is_achievable,
+            sa.is_relevant,
+            sa.is_time_bound,
+            riskAnalysis.score,
+            riskAnalysis.level,
+            riskAnalysis.requires_approval,
           ],
         );
         await chatConnection.query(

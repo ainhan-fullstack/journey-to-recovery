@@ -15,5 +15,8 @@
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "baseline-browser-mapping": "^2.10.17"
+  }
 }

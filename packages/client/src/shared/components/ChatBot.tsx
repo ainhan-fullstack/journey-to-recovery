@@ -211,7 +211,7 @@ const ChatBot = () => {
             <Menu className="w-5 h-5" />
           </button>
           <span className="ml-4 font-medium text-gray-700">
-            Leo Rehabilitation Assistant
+            Camay Rehabilitation Assistant
           </span>
         </div>
 

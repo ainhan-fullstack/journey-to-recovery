@@ -7,7 +7,7 @@
 // --- OpenAI SDK ---
 import OpenAI from "openai";
 import {
-  REHAB_LEO_SYSTEM_PROMPT,
+  CAMAY_SYSTEM_PROMPT,
   type SMARTGoalResponse,
 } from "../../utilities/prompt.config";
 
@@ -71,7 +71,7 @@ export class ChatSimulator {
     const response = await this.ai.chat.completions.create({
       model: "gpt-5.4-nano",
       messages: [
-        { role: "system", content: REHAB_LEO_SYSTEM_PROMPT },
+        { role: "system", content: CAMAY_SYSTEM_PROMPT },
         ...this.history,
       ],
       temperature: 0.0,
