@@ -23,6 +23,7 @@
     "mysql2": "^3.15.2",
     "openai": "^6.32.0",
     "server": "workspace:*",
+    "xlsx": "^0.18.5",
     "zod": "^4.1.12"
   },
   "scripts": {
@@ -30,6 +31,9 @@
     "dev": "bun --watch run index.ts",
     "test": "bun test",
     "report": "bun run tests/evaluation/report.ts",
-    "aggregate": "bun run tests/evaluation/aggregate.ts"
+    "aggregate": "bun run tests/evaluation/aggregate.ts",
+    "fill-excel": "bun run tests/evaluation/fill-excel.ts",
+    "gen-excel": "bun run tests/evaluation/generate-excel.ts",
+    "summarise": "bun run tests/evaluation/summarise-runs.ts"
   }
 }

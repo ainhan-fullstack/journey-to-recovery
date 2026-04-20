@@ -16,7 +16,8 @@ const RESULTS_DIR = resolve(import.meta.dir, "results");
 
 // Parse --model-name flag
 const modelNameIdx = process.argv.indexOf("--model-name");
-const FILTER_MODEL = modelNameIdx !== -1 ? process.argv[modelNameIdx + 1] : null;
+const FILTER_MODEL =
+  modelNameIdx !== -1 ? process.argv[modelNameIdx + 1] : null;
 
 interface RunRow {
   id: string;
@@ -56,7 +57,8 @@ function mean(values: number[]): number {
 function stdDev(values: number[]): number {
   if (values.length <= 1) return 0;
   const m = mean(values);
-  const variance = values.reduce((sum, v) => sum + (v - m) ** 2, 0) / (values.length - 1);
+  const variance =
+    values.reduce((sum, v) => sum + (v - m) ** 2, 0) / (values.length - 1);
   return Math.sqrt(variance);
 }
 
@@ -85,7 +87,9 @@ function main() {
   // Load and group by model
   const runsByModel = new Map<string, RunFile[]>();
   for (const file of files) {
-    const data = JSON.parse(readFileSync(resolve(RESULTS_DIR, file), "utf-8")) as RunFile;
+    const data = JSON.parse(
+      readFileSync(resolve(RESULTS_DIR, file), "utf-8"),
+    ) as RunFile;
     if (FILTER_MODEL && data.model !== FILTER_MODEL) continue;
     const existing = runsByModel.get(data.model) ?? [];
     existing.push(data);
@@ -105,11 +109,17 @@ function main() {
 
     // ── Overall metrics ────────────────────────────────────────────────────────
     const passRates = runs.map((r) => r.behavioralPassRate.percent);
-    const judgeAvgs = runs.map((r) => r.averageJudgeScore).filter((v): v is number => v !== null);
+    const judgeAvgs = runs
+      .map((r) => r.averageJudgeScore)
+      .filter((v): v is number => v !== null);
 
-    console.log(`\n  Behavioral pass rate: ${fmt(mean(passRates), stdDev(passRates))}%`);
+    console.log(
+      `\n  Behavioral pass rate: ${fmt(mean(passRates), stdDev(passRates))}%`,
+    );
     if (judgeAvgs.length > 0) {
-      console.log(`  Avg judge score:     ${fmt(mean(judgeAvgs), stdDev(judgeAvgs))} / 5.00`);
+      console.log(
+        `  Avg judge score:     ${fmt(mean(judgeAvgs), stdDev(judgeAvgs))} / 5.00`,
+      );
     }
 
     // ── Per-scenario table ─────────────────────────────────────────────────────
@@ -129,7 +139,6 @@ function main() {
         pad("Comm", 12),
         pad("Safe", 12),
         pad("Eff", 12),
-        pad("Clin", 12),
         pad("Overall", 12),
       );
     }
@@ -137,8 +146,12 @@ function main() {
     console.log("─".repeat(hasJudge ? 100 : 60));
 
     for (const sid of scenarioIds) {
-      const scenarioRuns = runs.map((r) => r.scenarios.find((s) => s.id === sid)!);
-      const completePct = (scenarioRuns.filter((s) => s.completed).length / scenarioRuns.length) * 100;
+      const scenarioRuns = runs.map(
+        (r) => r.scenarios.find((s) => s.id === sid)!,
+      );
+      const completePct =
+        (scenarioRuns.filter((s) => s.completed).length / scenarioRuns.length) *
+        100;
       const turns = scenarioRuns.map((s) => s.turns);
 
       const rowParts = [
@@ -149,12 +162,20 @@ function main() {
       ];
 
       if (hasJudge) {
-        const dims = ["smart_quality", "communication_quality", "safety_compliance", "efficiency", "clinical_relevance", "overall"] as const;
+        const dims = [
+          "smart_quality",
+          "communication_quality",
+          "safety_compliance",
+          "efficiency",
+          "overall",
+        ] as const;
         for (const dim of dims) {
           const vals = scenarioRuns
             .map((s) => s.judgeScores?.[dim])
             .filter((v): v is number => v != null);
-          rowParts.push(pad(vals.length > 0 ? fmt(mean(vals), stdDev(vals)) : "N/A", 12));
+          rowParts.push(
+            pad(vals.length > 0 ? fmt(mean(vals), stdDev(vals)) : "N/A", 12),
+          );
         }
       }
 
@@ -165,13 +186,14 @@ function main() {
 
     // ── Dimension averages across all scenarios ────────────────────────────────
     if (hasJudge) {
-      console.log("\n  Judge dimension averages (across all scenarios, all runs):");
+      console.log(
+        "\n  Judge dimension averages (across all scenarios, all runs):",
+      );
       const dims = [
         ["SMART Quality", "smart_quality"],
         ["Communication", "communication_quality"],
         ["Safety", "safety_compliance"],
         ["Efficiency", "efficiency"],
-        ["Clinical Relevance", "clinical_relevance"],
         ["Overall", "overall"],
       ] as const;
 
@@ -183,7 +205,9 @@ function main() {
           }
         }
         if (allVals.length > 0) {
-          console.log(`    ${pad(label, 22)} ${fmt(mean(allVals), stdDev(allVals))} / 5.00`);
+          console.log(
+            `    ${pad(label, 22)} ${fmt(mean(allVals), stdDev(allVals))} / 5.00`,
+          );
         }
       }
     }
@@ -197,12 +221,16 @@ function main() {
     console.log("  Cross-Model Comparison");
     console.log(`${"=".repeat(80)}`);
 
-    console.log(`\n${pad("Model", 25)} | ${pad("Runs", 5)} | ${pad("Pass Rate", 16)} | ${pad("Judge Avg", 16)}`);
+    console.log(
+      `\n${pad("Model", 25)} | ${pad("Runs", 5)} | ${pad("Pass Rate", 16)} | ${pad("Judge Avg", 16)}`,
+    );
     console.log("─".repeat(70));
 
     for (const [model, runs] of runsByModel) {
       const passRates = runs.map((r) => r.behavioralPassRate.percent);
-      const judgeAvgs = runs.map((r) => r.averageJudgeScore).filter((v): v is number => v !== null);
+      const judgeAvgs = runs
+        .map((r) => r.averageJudgeScore)
+        .filter((v): v is number => v !== null);
       console.log(
         `${pad(model, 25)} | ${pad(String(runs.length), 5)} | ${pad(fmt(mean(passRates), stdDev(passRates)) + "%", 16)} | ${pad(judgeAvgs.length > 0 ? fmt(mean(judgeAvgs), stdDev(judgeAvgs)) : "N/A", 16)}`,
       );
