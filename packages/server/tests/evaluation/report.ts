@@ -29,9 +29,10 @@ const RUN_JUDGE = process.argv.includes("--judge");
 
 // Parse --model-name flag
 const modelNameIdx = process.argv.indexOf("--model-name");
-const MODEL_NAME = modelNameIdx !== -1 && process.argv[modelNameIdx + 1]
-  ? process.argv[modelNameIdx + 1]!
-  : "unknown-model";
+const MODEL_NAME =
+  modelNameIdx !== -1 && process.argv[modelNameIdx + 1]
+    ? process.argv[modelNameIdx + 1]!
+    : "unknown-model";
 
 const RESULTS_DIR = resolve(import.meta.dir, "results");
 
@@ -62,7 +63,9 @@ async function main() {
   console.log("  Camay Evaluation Report");
   console.log(`  ${new Date().toLocaleString()}`);
   console.log(`  Model: ${MODEL_NAME}`);
-  console.log(`  LLM Judge: ${RUN_JUDGE ? "enabled" : "disabled (use --judge to enable)"}`);
+  console.log(
+    `  LLM Judge: ${RUN_JUDGE ? "enabled" : "disabled (use --judge to enable)"}`,
+  );
   console.log(`${"=".repeat(70)}\n`);
 
   const rows: ReportRow[] = [];
@@ -85,7 +88,11 @@ async function main() {
 
     let judgeScores: JudgeScores | null = null;
     if (RUN_JUDGE && result.turns.length > 0) {
-      judgeScores = await judgeConversation(API_KEY, scenario.name, result.turns);
+      judgeScores = await judgeConversation(
+        API_KEY,
+        scenario.name,
+        result.turns,
+      );
     }
 
     rows.push({
@@ -101,7 +108,9 @@ async function main() {
       judgeScores,
     });
 
-    const status = result.reachedGoalComplete ? "✓ complete" : `✗ ${result.finalState}`;
+    const status = result.reachedGoalComplete
+      ? "✓ complete"
+      : `✗ ${result.finalState}`;
     console.log(
       `${status} | ${result.totalTurns} turn(s)${parseErrors > 0 ? ` | ${parseErrors} parse error(s)` : ""}`,
     );
@@ -119,7 +128,14 @@ async function main() {
     pad("RiskFlag", 9),
     pad("MissingInfo", 12),
     ...(RUN_JUDGE
-      ? [pad("SMART", 6), pad("Comm", 5), pad("Safe", 5), pad("Eff", 4), pad("Clin", 5), pad("Avg", 5)]
+      ? [
+          pad("SMART", 6),
+          pad("Comm", 5),
+          pad("Safe", 5),
+          pad("Eff", 4),
+          pad("Clin", 5),
+          pad("Avg", 5),
+        ]
       : []),
   ].join(" | ");
   console.log(header);
@@ -142,11 +158,17 @@ async function main() {
           pad(row.judgeScores.communication_quality, 5),
           pad(row.judgeScores.safety_compliance, 5),
           pad(row.judgeScores.efficiency, 4),
-          pad(row.judgeScores.clinical_relevance, 5),
           pad(row.judgeScores.overall, 5),
         ]
       : RUN_JUDGE
-        ? [pad("N/A", 6), pad("N/A", 5), pad("N/A", 5), pad("N/A", 4), pad("N/A", 5), pad("N/A", 5)]
+        ? [
+            pad("N/A", 6),
+            pad("N/A", 5),
+            pad("N/A", 5),
+            pad("N/A", 4),
+            pad("N/A", 5),
+            pad("N/A", 5),
+          ]
         : [];
 
     if (row.judgeScores) {
@@ -201,8 +223,15 @@ async function main() {
     model: MODEL_NAME,
     timestamp: new Date().toISOString(),
     judgeEnabled: RUN_JUDGE,
-    behavioralPassRate: { passed: passCount, total: rows.length, percent: Math.round((passCount / rows.length) * 100) },
-    averageJudgeScore: judgeCount > 0 ? parseFloat((totalOverall / judgeCount).toFixed(2)) : null,
+    behavioralPassRate: {
+      passed: passCount,
+      total: rows.length,
+      percent: Math.round((passCount / rows.length) * 100),
+    },
+    averageJudgeScore:
+      judgeCount > 0
+        ? parseFloat((totalOverall / judgeCount).toFixed(2))
+        : null,
     scenarios: rows,
   };
 
