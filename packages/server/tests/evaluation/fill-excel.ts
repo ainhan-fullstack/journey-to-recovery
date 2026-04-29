@@ -19,7 +19,7 @@ import { scenarios } from "./scenarios";
 
 config({ path: resolve(import.meta.dir, "../../.env") });
 
-const isGemini = process.env.EVAL_MODEL === "gemini";
+const isGemini = process.env.EVAL_MODEL === "gemini-2.5-flash";
 const API_KEY = isGemini
   ? (process.env.GEMINI_API_KEY ?? "")
   : (process.env.OPENAI_API_KEY ?? "");
@@ -45,7 +45,7 @@ interface Row {
 
 async function main() {
   const workbook = XLSX.readFile(INPUT_PATH);
-  const sheet = workbook.Sheets["Scenarios"];
+  const sheet = workbook.Sheets["Scenarios"]!;
   const rows = XLSX.utils.sheet_to_json<Row>(sheet);
 
   console.log(`\n${"=".repeat(70)}`);

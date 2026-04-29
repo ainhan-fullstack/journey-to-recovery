@@ -34,6 +34,7 @@
     "aggregate": "bun run tests/evaluation/aggregate.ts",
     "fill-excel": "bun run tests/evaluation/fill-excel.ts",
     "gen-excel": "bun run tests/evaluation/generate-excel.ts",
-    "summarise": "bun run tests/evaluation/summarise-runs.ts"
+    "summarise": "bun run tests/evaluation/summarise-runs.ts",
+    "judge-excel": "bun run tests/evaluation/judge-excel.ts"
   }
 }

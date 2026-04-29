@@ -26,7 +26,7 @@ import {
 import { calculateRisk } from "../utilities/riskCalculator";
 
 let ai: any;
-if (process.env.EVAL_MODEL === "gemini") {
+if (process.env.EVAL_MODEL === "gemini-2.5-flash") {
   ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 } else {
   ai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -592,7 +592,7 @@ userRoutes.post(
 
       let response: any;
 
-      if (process.env.EVAL_MODEL === "gemini") {
+      if (process.env.EVAL_MODEL === "gemini-2.5-flash") {
         const historyForGemini = historyRows.reverse().map((msg: any) => ({
           role: msg.role === "bot" ? "model" : "user",
           parts: [{ text: msg.content }],
@@ -610,7 +610,9 @@ userRoutes.post(
         });
       } else {
         const historyForOpenAI = historyRows.reverse().map((msg: any) => ({
-          role: (msg.role === "bot" ? "assistant" : "user") as "assistant" | "user",
+          role: (msg.role === "bot" ? "assistant" : "user") as
+            | "assistant"
+            | "user",
           content: msg.content as string,
         }));
 
@@ -627,9 +629,9 @@ userRoutes.post(
       }
 
       const rawText =
-        process.env.EVAL_MODEL === "gemini"
+        process.env.EVAL_MODEL === "gemini-2.5-flash"
           ? response.text
-          : response.choices?.[0]?.message?.content ?? "";
+          : (response.choices?.[0]?.message?.content ?? "");
 
       if (!rawText) {
         throw new Error("No response text from AI model");

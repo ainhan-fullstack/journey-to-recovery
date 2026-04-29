@@ -28,11 +28,12 @@ const API_KEY = process.env.OPENAI_API_KEY ?? "";
 const RUN_JUDGE = process.argv.includes("--judge");
 
 // Parse --model-name flag
-const modelNameIdx = process.argv.indexOf("--model-name");
-const MODEL_NAME =
-  modelNameIdx !== -1 && process.argv[modelNameIdx + 1]
-    ? process.argv[modelNameIdx + 1]!
-    : "unknown-model";
+// const modelNameIdx = process.argv.indexOf("--model-name");
+// const MODEL_NAME =
+//   modelNameIdx !== -1 && process.argv[modelNameIdx + 1]
+//     ? process.argv[modelNameIdx + 1]!
+//     : "unknown-model";
+const MODEL_NAME = process.env.EVAL_MODEL ?? "unknown-model";
 
 const RESULTS_DIR = resolve(import.meta.dir, "results");
 
